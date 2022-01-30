@@ -1,7 +1,8 @@
 ---
 title: Astar寻路在Unity项目中的简单应用
 date: 2022-01-30 11:37:00
-tags: 算法
+tags: [C#, Unity]
+categories: 算法
 ---
 ### 概念
 * 寻找计算两点之间的最短路径，基本思想源于BFS，是Dijkstra寻路的进阶版，相比DijkStra引入了目标点到终点的预估消耗值。

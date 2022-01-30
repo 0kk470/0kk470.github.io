@@ -108,4 +108,4 @@ deploy:
   type: 'git'
   repo: https://github.com/0kk470/0kk470.github.io
   branch: gh-pages
-  message: hello world
+##  message: hello world
