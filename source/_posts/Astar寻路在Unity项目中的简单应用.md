@@ -11,6 +11,11 @@ categories: 算法
   ![算法伪码图](Astar_logic.png)
 	其中OpenList可以考虑使用最小二叉堆或者优先级队列，这样每次取最小值时间复杂度为O(1)。
 ---
+
+### 之前在旧博客的实现
+*  [数据结构和算法总结（三）：A* 寻路算法](https://www.cnblogs.com/0kk470/p/11340214.html)
+---
+
 ### Unity逻辑实现
 
 ```Csharp
