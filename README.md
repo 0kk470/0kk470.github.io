@@ -1,6 +1,6 @@
 # My Personal blog
 
-* batchfile for jenkins
+* bat script for jenkins
 ```bat
 echo  update blog
 if exist node_modules\ (
