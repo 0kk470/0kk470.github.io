@@ -20,19 +20,20 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="about meGithub: https:&#x2F;&#x2F;github.com&#x2F;0kk470 Email: &amp;#x6f;&amp;#x6f;&amp;#x6b;&amp;#x6b;&amp;#52;&amp;#x37;&amp;#x6f;&amp;#x6f;&amp;#x40;&amp;#103;&amp;#109;&amp;#97;&amp;#x69;&amp;#108;&amp;#46;&amp;#x63;&amp;#x6f;&amp;#109;">
-<meta property="og:type" content="website">
-<meta property="og:title" content="about">
-<meta property="og:url" content="http://example.com/about/index.html">
+  <meta name="description" content="前言复习下List的一些知识点。 源码地址。 正文定义   可通过索引访问的对象的强类型列表，连续性存储结构，底层为数组，可动态扩容。 成员变量   修饰符 类型 变量名 作用简述    private 泛型数组 items 存储目标数据类型的数组   private int size 当前数组内的条目数量   private int _version 数据版本，用于保证对数组的合法操作   pr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C#容器源码之List">
+<meta property="og:url" content="http://example.com/2022/06/09/C#%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BList/index.html">
 <meta property="og:site_name" content="saltyfishkk">
-<meta property="og:description" content="about meGithub: https:&#x2F;&#x2F;github.com&#x2F;0kk470 Email: &amp;#x6f;&amp;#x6f;&amp;#x6b;&amp;#x6b;&amp;#52;&amp;#x37;&amp;#x6f;&amp;#x6f;&amp;#x40;&amp;#103;&amp;#109;&amp;#97;&amp;#x69;&amp;#108;&amp;#46;&amp;#x63;&amp;#x6f;&amp;#109;">
+<meta property="og:description" content="前言复习下List的一些知识点。 源码地址。 正文定义   可通过索引访问的对象的强类型列表，连续性存储结构，底层为数组，可动态扩容。 成员变量   修饰符 类型 变量名 作用简述    private 泛型数组 items 存储目标数据类型的数组   private int size 当前数组内的条目数量   private int _version 数据版本，用于保证对数组的合法操作   pr">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2022-01-30T13:22:15.000Z">
-<meta property="article:modified_time" content="2022-02-10T08:01:21.828Z">
+<meta property="article:published_time" content="2022-06-09T14:33:49.000Z">
+<meta property="article:modified_time" content="2022-06-09T15:07:11.848Z">
 <meta property="article:author" content="0kk470">
+<meta property="article:tag" content="C#">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://example.com/about/">
+<link rel="canonical" href="http://example.com/2022/06/09/C#%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BList/">
 
 
 <script id="page-configurations">
@@ -40,13 +41,12 @@
   CONFIG.page = {
     sidebar: "",
     isHome : false,
-    isPost : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>about | saltyfishkk
-</title>
+  <title>C#容器源码之List | saltyfishkk</title>
   
 
 
@@ -158,45 +158,137 @@
       <div class="main-inner">
         <div class="content-wrap">
           
-  
-  
 
-          <div class="content page posts-expand">
+          <div class="content post posts-expand">
             
 
     
-    
-    
-    <div class="post-block" lang="zh-CN">
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/06/09/C#%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BList/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0kk470">
+      <meta itemprop="description" content="咸鱼KK的随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="saltyfishkk">
+    </span>
       <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          C#容器源码之List
+        </h1>
 
-<h1 class="post-title" itemprop="name headline">about
-</h1>
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
 
-<div class="post-meta">
+              <time title="创建时间：2022-06-09 22:33:49 / 修改时间：23:07:11" itemprop="dateCreated datePublished" datetime="2022-06-09T22:33:49+08:00">2022-06-09</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/" itemprop="url" rel="index"><span itemprop="name">源码剖析</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>复习下<code>List</code>的一些知识点。</p>
+<p><a target="_blank" rel="noopener" href="https://referencesource.microsoft.com/#mscorlib/system/collections/generic/list.cs">源码地址</a>。</p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><p>   可通过索引访问的对象的强类型列表，连续性存储结构，底层为数组，可动态扩容。</p>
+<h2 id="成员变量"><a href="#成员变量" class="headerlink" title="成员变量"></a>成员变量</h2><table>
+<thead>
+<tr>
+<th>修饰符</th>
+<th align="center">类型</th>
+<th align="right">变量名</th>
+<th align="right">作用简述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>private</td>
+<td align="center">泛型数组</td>
+<td align="right"><em>items</em></td>
+<td align="right">存储目标数据类型的数组</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right"><em>size</em></td>
+<td align="right">当前数组内的条目数量</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right">_version</td>
+<td align="right">数据版本，用于保证对数组的合法操作</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right"><em>syncRoot</em></td>
+<td align="right">多线程下使用的同步对象，不过现在基本废弃了，转用<code>ConcurrentBag</code></td>
+</tr>
+<tr>
+<td>private static</td>
+<td align="center">泛型数组</td>
+<td align="right">_emptyArray</td>
+<td align="right">默认构造函数内_items初始化指向的只读数组</td>
+</tr>
+</tbody></table>
+<h2 id="构造函数"><a href="#构造函数" class="headerlink" title="构造函数"></a>构造函数</h2><p>TODO</p>
+<h2 id="核心函数"><a href="#核心函数" class="headerlink" title="核心函数"></a>核心函数</h2><p>TODO</p>
+<h2 id="使用总结"><a href="#使用总结" class="headerlink" title="使用总结"></a>使用总结</h2><p>TODO</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C#</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/" rel="prev" title="WindowsServer使用Jenkins自动部署github博客网站的坑">
+      <i class="fa fa-chevron-left"></i> WindowsServer使用Jenkins自动部署github博客网站的坑
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
   
 
-</div>
-
-</header>
-
-      
-      
-      
-      <div class="post-body">
-          <h2 id="about-me"><a href="#about-me" class="headerlink" title="about me"></a>about me</h2><p>Github: <a target="_blank" rel="noopener" href="https://github.com/0kk470">https://github.com/0kk470</a></p>
-<p>Email: <a href="mailto:&#x6f;&#x6f;&#x6b;&#x6b;&#52;&#x37;&#x6f;&#x6f;&#x40;&#103;&#109;&#97;&#x69;&#108;&#46;&#x63;&#x6f;&#109;">&#x6f;&#x6f;&#x6b;&#x6b;&#52;&#x37;&#x6f;&#x6f;&#x40;&#103;&#109;&#97;&#x69;&#108;&#46;&#x63;&#x6f;&#109;</a></p>
-
-      </div>
-      
-      
-      
-    </div>
-    
-
-    
-    
-    
 
 
           </div>
@@ -247,7 +339,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#about-me"><span class="nav-number">1.</span> <span class="nav-text">about me</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%AD%A3%E6%96%87"><span class="nav-number">2.</span> <span class="nav-text">正文</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">2.1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%90%E5%91%98%E5%8F%98%E9%87%8F"><span class="nav-number">2.2.</span> <span class="nav-text">成员变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0"><span class="nav-number">2.3.</span> <span class="nav-text">构造函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E5%87%BD%E6%95%B0"><span class="nav-number">2.4.</span> <span class="nav-text">核心函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93"><span class="nav-number">2.5.</span> <span class="nav-text">使用总结</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 

@@ -162,6 +162,119 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/06/09/C#%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BList/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0kk470">
+      <meta itemprop="description" content="咸鱼KK的随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="saltyfishkk">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/06/09/C#%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BList/" class="post-title-link" itemprop="url">C#容器源码之List</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-06-09 22:33:49 / 修改时间：23:07:11" itemprop="dateCreated datePublished" datetime="2022-06-09T22:33:49+08:00">2022-06-09</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/" itemprop="url" rel="index"><span itemprop="name">源码剖析</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>复习下<code>List</code>的一些知识点。</p>
+<p><a target="_blank" rel="noopener" href="https://referencesource.microsoft.com/#mscorlib/system/collections/generic/list.cs">源码地址</a>。</p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><p>   可通过索引访问的对象的强类型列表，连续性存储结构，底层为数组，可动态扩容。</p>
+<h2 id="成员变量"><a href="#成员变量" class="headerlink" title="成员变量"></a>成员变量</h2><table>
+<thead>
+<tr>
+<th>修饰符</th>
+<th align="center">类型</th>
+<th align="right">变量名</th>
+<th align="right">作用简述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>private</td>
+<td align="center">泛型数组</td>
+<td align="right"><em>items</em></td>
+<td align="right">存储目标数据类型的数组</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right"><em>size</em></td>
+<td align="right">当前数组内的条目数量</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right">_version</td>
+<td align="right">数据版本，用于保证对数组的合法操作</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right"><em>syncRoot</em></td>
+<td align="right">多线程下使用的同步对象，不过现在基本废弃了，转用<code>ConcurrentBag</code></td>
+</tr>
+<tr>
+<td>private static</td>
+<td align="center">泛型数组</td>
+<td align="right">_emptyArray</td>
+<td align="right">默认构造函数内_items初始化指向的只读数组</td>
+</tr>
+</tbody></table>
+<h2 id="构造函数"><a href="#构造函数" class="headerlink" title="构造函数"></a>构造函数</h2><p>TODO</p>
+<h2 id="核心函数"><a href="#核心函数" class="headerlink" title="核心函数"></a>核心函数</h2><p>TODO</p>
+<h2 id="使用总结"><a href="#使用总结" class="headerlink" title="使用总结"></a>使用总结</h2><p>TODO</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -187,7 +300,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-02-21 17:13:09 / 修改时间：19:08:07" itemprop="dateCreated datePublished" datetime="2022-02-21T17:13:09+08:00">2022-02-21</time>
+              <time title="创建时间：2022-02-21 17:13:09 / 修改时间：19:13:19" itemprop="dateCreated datePublished" datetime="2022-02-21T17:13:09+08:00">2022-02-21</time>
             </span>
 
           
@@ -201,20 +314,20 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>摸索了大半天天终于弄好了。</p>
-<p>有关github webhook 和 jenkins的配置可以参考<a target="_blank" rel="noopener" href="https://www.blazemeter.com/blog/how-to-integrate-your-github-repository-to-your-jenkins-project">这篇文章</a>。</p>
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>摸索了大半天终于弄好了。</p>
+<p>有关<code>github webhook</code> 和 <code>jenkins</code>的配置可以参考<a target="_blank" rel="noopener" href="https://www.blazemeter.com/blog/how-to-integrate-your-github-repository-to-your-jenkins-project">这篇文章</a>。</p>
 <h1 id="踩坑"><a href="#踩坑" class="headerlink" title="踩坑"></a>踩坑</h1><h3 id="SSL验证的问题"><a href="#SSL验证的问题" class="headerlink" title="SSL验证的问题"></a>SSL验证的问题</h3><hr>
 <p>使用的<code>https</code>来传递信息触发构建事件，结果push上去后<code>github webhook</code>抛了个错误信息。</p>
 <p><img src="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/github_error.png" alt="错误"></p>
 <p>原因是没有配置正确的SSL证书验证，于是从对应的云服务商（我用的腾讯云）那下载了之前申请好的SSL证书，下载格式选择为<code>jks</code>。</p>
 <p><img src="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/download_ssl.png" alt="证书下载"></p>
-<p>将下载好的证书放到jenkins的根目录，然后在配置文件<code>jenkins.xml</code>文件中的arguments项里添加。</p>
+<p>将下载好的证书放到jenkins的根目录，然后在配置文件<code>jenkins.xml</code>中的<code>arguments</code>节点项里添加如下参数。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">--httpsKeyStore=&quot;%JENKINS_HOME%\证书名.jks&quot; --httpsKeyStorePassword=&quot;证书校验密码&quot;</span><br></pre></td></tr></table></figure>
 <p><img src="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/argument.png" alt="argument"></p>
-<p>之后重启jenkins，然后让在github的仓库webhook页面<code>redelivery</code>一下就行。</p>
+<p>之后重启<code>jenkins</code>，然后让repo对应的webhook页面<code>redelivery</code>一下就行。</p>
 <p><img src="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/redelivery.png" alt="redelivery"></p>
 <h3 id="批处理脚本命令无法执行的问题"><a href="#批处理脚本命令无法执行的问题" class="headerlink" title="批处理脚本命令无法执行的问题"></a>批处理脚本命令无法执行的问题</h3><hr>
-<p>构建时可以让jenkins调用本地bat脚本</p>
+<p>构建时可以让<code>jenkins</code>调用本地bat脚本</p>
 <p><img src="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/build_bat.png" alt="build_bat"></p>
 <p>逻辑如下</p>
 <figure class="highlight bat"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span>  update blog</span><br><span class="line"><span class="built_in">cd</span> ./repo</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> <span class="keyword">exist</span> node_modules\ (</span><br><span class="line">  <span class="built_in">echo</span> skip install npm_module </span><br><span class="line">) <span class="keyword">else</span> (</span><br><span class="line">  <span class="keyword">call</span> npm install</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">call</span> hexo clean</span><br><span class="line"></span><br><span class="line"><span class="keyword">call</span> hexo g</span><br></pre></td></tr></table></figure>
@@ -700,14 +813,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">6</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
@@ -718,6 +831,14 @@
       </div>
   </nav>
 </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/0kk470" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;0kk470" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ookk47oo@gmail.com" title="E-Mail → mailto:ookk47oo@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
 
 
 
