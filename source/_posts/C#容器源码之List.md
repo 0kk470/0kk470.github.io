@@ -14,7 +14,7 @@ categories: 源码剖析
 
 ### 定义
 
-   可通过索引访问的对象的强类型列表，连续性存储结构，底层为数组，可动态扩容。
+   可通过下标索引访问的强类型列表，连续性存储结构，底层为数组，可动态扩容。
 
 
 ### 成员变量
@@ -24,7 +24,7 @@ categories: 源码剖析
 private|泛型数组|_items_| 存储目标数据类型的数组
 private|int|_size_|当前数组内的条目数量
 private|int|_version|数据版本，用于校验对数组的操作是否合法
-private|int|_syncRoot_|多线程下使用的同步对象，不过现在基本废弃了，转用```ConcurrentBag```
+private|int|_syncRoot_|多线程下使用的同步对象，不过现在基本废弃了，多线程下最好用```ConcurrentBag```
 private static| 泛型数组|_emptyArray| 默认构造函数内_items初始化指向的只读数组
 
 ### 构造函数
@@ -38,7 +38,7 @@ private static| 泛型数组|_emptyArray| 默认构造函数内_items初始化�
 
 ### 扩容机制
 
-   在向```List```中添加新元素时(调用```Add```、```Insert```、```AddRange```等)，会先调用一次```EnsureCapacity```来保证数组的容量足够容纳新的元素。如果是空数组，那么会以初始为```4```的容量来初始化，否则的话就会分配一个当前数组的长度```2```倍的新数组，然后再将当前数组的所有元素拷贝过去，时间复杂度为```O(n)```，因此在编写代码时，如果能预估列表使用大小的话，那么最好是提前预分配大小，减少频繁扩容带来的开销。
+   在向```List```中添加新元素时(调用```Add```、```Insert```、```AddRange```等)，会先调用一次```EnsureCapacity```来保证数组的容量足够容纳新的元素。如果是空数组，那么会以初始为```4```的容量来初始化，否则的话就会分配一个当前数组的长度```2```倍的新数组，然后再将当前数组的所有元素拷贝过去，时间复杂度为```O(n)```，因此在编写代码时，如果能预估```List```使用容量的话，那么最好是提前预分配容量，减少频繁扩容带来的开销。
 
    ```CSharp
            private void EnsureCapacity(int min) {
@@ -93,14 +93,14 @@ private static| 泛型数组|_emptyArray| 默认构造函数内_items初始化�
    ```
 #### InsertRange
    先检测扩容,然后尝试转换为```ICollection<T>```，如果不是```ICollection<T>```（即```IEnumrable<T>```)，那么会使用迭代器循环不停地去调用```Insert```（数量很大的话会有一定性能开销)。
-   之后与```Insert```类似，将目标位置后元素往后挪，将插入的元素拷贝过去，拷贝时会生成一个临时数组来存放要拷贝的元素，这里有一个优化的地方时，如果被拷贝元素的容器和目标容器本来就是同一个，那么不需要分配新的临时数组，而是复用当前操作的数组。
+   之后与```Insert```类似，将目标位置后元素往后挪，将插入的元素拷贝过去，拷贝时会生成一个临时数组来存放要拷贝的元素( 这里有一个优化点：如果被拷贝元素的容器和目标容器本来就是同一个，那么不需要分配新的临时数组，而是复用当前操作的数组)。
    ```CSharp
       // If we're inserting a List into itself, we want to be able to deal with that.
    if (this == c) {
        // Copy first part of _items to insert location
        Array.Copy(_items, 0, _items, index, index);
        // Copy last part of _items back to inserted location
-       Array.Copy(_items, index+count, _items, index*2, _size-index);
+       Array.Copy(_items, index + count, _items, index*2, _size-index);
    }
    else {
        T[] itemsToInsert = new T[count];
@@ -236,6 +236,6 @@ FindIndex的二次包装，判断```List```是否存在符合条件函数的元�
 
 1. 尽量避免频繁在头部增删元素。
 2. 不要在正向循环中去增删元素，否则会导致迭代的下标错位和越界。
-3. 在```new```一个新的```Lis```t时，预估好容量，避免多次扩容的开销。另外使用一组数据元素初始化```List```时，避免使用```IEnumrable<T>```，尽可能地使用```ICollection<T>```。
+3. 在```new```一个新的```List```时，预估好容量，避免多次扩容的开销。另外使用一组数据元素初始化```List```时，避免使用```IEnumrable<T>```，尽可能地使用```ICollection<T>```。
 4. 在确定```List```不会再扩容的情况下，可以使用TrimExcess裁剪一部分数组空位置
 
