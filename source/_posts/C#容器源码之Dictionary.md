@@ -194,6 +194,215 @@ public Dictionary(IDictionary<TKey,TValue> dictionary,IEqualityComparer<TKey> co
             }
 ```
 
-关键函数
+### 关键函数
+***
+主要就查找、添加、删除几个操作相关的函数，并辅以图像说明下。
 
-TODO
+假设先初始化了一个容量大小为5的哈希表
+```CSharp
+var dict = new Dictionary<string,int>(5);
+```
+那么它的初始结构如下图所示
+
+![structure](1.png)
+
+#### 插入
+不管是```Add```也好还是直接通过操作符```[]```赋值,最终都会调用一个```Insert```函数，代码如下
+```CSharp
+        private void Insert(TKey key, TValue value, bool add) {
+        
+            if( key == null ) {
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key);
+            }
+ 
+            if (buckets == null) Initialize(0);
+            int hashCode = comparer.GetHashCode(key) & 0x7FFFFFFF;
+            int targetBucket = hashCode % buckets.Length;
+ 
+#if FEATURE_RANDOMIZED_STRING_HASHING
+            int collisionCount = 0;
+#endif
+ 
+            for (int i = buckets[targetBucket]; i >= 0; i = entries[i].next) {
+                if (entries[i].hashCode == hashCode && comparer.Equals(entries[i].key, key)) {
+                    if (add) { 
+                        ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_AddingDuplicate);
+                    }
+                    entries[i].value = value;
+                    version++;
+                    return;
+                } 
+ 
+#if FEATURE_RANDOMIZED_STRING_HASHING
+                collisionCount++;
+#endif
+            }
+            int index;
+            if (freeCount > 0) {
+                index = freeList;
+                freeList = entries[index].next;
+                freeCount--;
+            }
+            else {
+                if (count == entries.Length)
+                {
+                    Resize();
+                    targetBucket = hashCode % buckets.Length;
+                }
+                index = count;
+                count++;
+            }
+ 
+            entries[index].hashCode = hashCode;
+            entries[index].next = buckets[targetBucket];
+            entries[index].key = key;
+            entries[index].value = value;
+            buckets[targetBucket] = index;
+            version++;
+ 
+#if FEATURE_RANDOMIZED_STRING_HASHING
+ 
+#if FEATURE_CORECLR
+            // In case we hit the collision threshold we'll need to switch to the comparer which is using randomized string hashing
+            // in this case will be EqualityComparer<string>.Default.
+            // Note, randomized string hashing is turned on by default on coreclr so EqualityComparer<string>.Default will 
+            // be using randomized string hashing
+ 
+            if (collisionCount > HashHelpers.HashCollisionThreshold && comparer == NonRandomizedStringEqualityComparer.Default) 
+            {
+                comparer = (IEqualityComparer<TKey>) EqualityComparer<string>.Default;
+                Resize(entries.Length, true);
+            }
+#else
+            if(collisionCount > HashHelpers.HashCollisionThreshold && HashHelpers.IsWellKnownEqualityComparer(comparer)) 
+            {
+                comparer = (IEqualityComparer<TKey>) HashHelpers.GetRandomizedEqualityComparer(comparer);
+                Resize(entries.Length, true);
+            }
+#endif // FEATURE_CORECLR
+#endif
+ 
+        }
+```
+可以看到如果之前并没有预分配容量(```buckets```为```null```)，那么会先通过```Intialize```函数给```buckets```和```entries```数组分配内存，之后就是嗲用```comapre.GetHashCode```分配哈希码，注意这里得到的哈希码要和最大正整数数```0x7FFFFFFF```进行位且运算来去掉符号位（不能是负数），这样之后通过和```buckets```的容量大小```length```进行模除运算就能达到插入的```哈希key```在```buckets```数组上映射的位置。之后就是分为两种情况:
+1. 更新操作, 如果相同```bucket```位置的```entry```存在，并且```entry```的hashcode与计算后的hashcode一致，而且也不是```Add```操作，那么就更新```entry```存储的值，否则就会抛出重复添加元素的异常。
+2. 插入操作, 会先检查有没有空的```entry```节点（```FreeCount``` > 0 ,``` Remove```操作后留下的空位置）, 如果有空节点那么会优先使用空节点```freeList```(```Remove```后留下的所有空节点会串连成一个缓存链表，这里的```freeList```指向的其实就是缓存链表的头节点)，然后使用头插法将其插入对应```bucket```位置指向的链表，否则就将count加1，然后选用entries[count]位置的节点
+
+之后就是上文提到的判断哈希冲突是否过多从而进行重新哈希的逻辑。
+举例来说，假如我们对上文的dict指向多次插入操作，而且它们的Hash码都是21，在bucket上映射的位置为1。
+```CSharp
+dict.Add("A", 1);
+dict.Add("B", 2);
+dict.Add("C", 3);
+```
+那么执行上述操作后，结构如下图
+
+![2](2.png)
+
+#### 删除
+删除的逻辑比较简单, 先将```key```转换为```hashcode```，然后再转换为```buckets```中的位置，之后就是遍历比较```bucket```位置指向的链表比较```hashcode```，如果相等则清除对应位置的```entry```数据，并将其放入到```freelist```链表上缓存起来以方便下次```Insert```操作复用。代码如下:
+```Csharp
+        public bool Remove(TKey key) {
+            if(key == null) {
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key);
+            }
+ 
+            if (buckets != null) {
+                int hashCode = comparer.GetHashCode(key) & 0x7FFFFFFF;
+                int bucket = hashCode % buckets.Length;
+                int last = -1;
+                for (int i = buckets[bucket]; i >= 0; last = i, i = entries[i].next) {
+                    if (entries[i].hashCode == hashCode && comparer.Equals(entries[i].key, key)) {
+                        if (last < 0) {
+                            buckets[bucket] = entries[i].next;
+                        }
+                        else {
+                            entries[last].next = entries[i].next;
+                        }
+                        entries[i].hashCode = -1;
+                        entries[i].next = freeList;
+                        entries[i].key = default(TKey);
+                        entries[i].value = default(TValue);
+                        freeList = i;
+                        freeCount++;
+                        version++;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+```
+
+紧接着上文操作，假设我们执行下列删除操作。
+
+```CSharp
+dict.Remove("A");
+dict.Remove("B");
+```
+那么结构变化如下图
+
+删除```A```之后
+
+![3](3.png)
+
+删除```B```之后
+
+![4](4.png)
+
+如果之后又调用了
+```CSharp
+dict.Add("D", 4)
+```
+那么会将```freeList```指向的列表头节点复用起来，如果```D```的```HashCode```模除不为```1```，而是在其他位置，比如假设D的```HashCode```为```18```，即```bucket```位置为```3```。那么操作后的结构如下图
+
+![5](5.png)
+
+
+#### 查找
+
+```GetOrDefault```、```Contains```、```TryGetValue```等函数内部都会用到```FindEntry```来查找对应元素。代码如下:
+
+```Csharp
+private int FindEntry(TKey key) {
+            if( key == null) {
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key);
+            }
+ 
+            if (buckets != null) {
+                int hashCode = comparer.GetHashCode(key) & 0x7FFFFFFF;
+                for (int i = buckets[hashCode % buckets.Length]; i >= 0; i = entries[i].next) {
+                    if (entries[i].hashCode == hashCode && comparer.Equals(entries[i].key, key)) return i;
+                }
+            }
+            return -1;
+        }
+```
+核心逻辑就是通过对应的```bucket```位置找到链表，遍历比较```hashcode```即可。
+所有操作大部分情况下时间复杂度皆为```O(1)```。
+
+注意```ContainsValue```未使用映射关系查找，而是从头遍历，因此时间复杂度为```O(n)```。
+
+```CSharp
+        public bool ContainsValue(TValue value) {
+            if (value == null) {
+                for (int i = 0; i < count; i++) {
+                    if (entries[i].hashCode >= 0 && entries[i].value == null) return true;
+                }
+            }
+            else {
+                EqualityComparer<TValue> c = EqualityComparer<TValue>.Default;
+                for (int i = 0; i < count; i++) {
+                    if (entries[i].hashCode >= 0 && c.Equals(entries[i].value, value)) return true;
+                }
+            }
+            return false;
+        }
+```
+
+### 使用总结
+***
+1. ```foreach```循环内不要去增删元素。
+2. 如果要批量删除元素，用一个```List```存储好要删除的```key```，然后在```List```的循环中执行```Remove```操作。
+3. 与```List```类似的扩容机制，所以在确定容量的情况下尽可能地预分配好空间。
+4. 避免频繁增删元素，频繁的增删操作会导致```entries```的链表逻辑结构顺序变化，每次foreach的顺序也可能会因此不同。类似情况下建议换用```SortedDictionary```。
