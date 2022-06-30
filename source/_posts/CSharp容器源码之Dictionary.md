@@ -32,7 +32,7 @@ private|ValueCollection| values| 值集合，惰性生成
 private|Object| _syncRoot|多线程下使用的同步对象，不过现在基本废弃了， 多线程建议使用```ConcurrentDictionary```
 
 ### Entry结构
-
+***
 ```CSharp
         private struct Entry {
             public int hashCode;    // Lower 31 bits of hash code, -1 if unused
@@ -88,9 +88,7 @@ public Dictionary(int capacity, IEqualityComparer<TKey> comparer)
 public Dictionary(IDictionary<TKey,TValue> dictionary,IEqualityComparer<TKey> comparer)
 
 ```
-预分配构造函数将```bucket```和```entries```两个数组以```capacity```大小初始化，而以容器作为参数的构造函数则不停迭代，将参数容器的元素依次```Add```到新创建的```Dictionary```当中。
-
-```comparer```为hashkey的查找比较函数，传入```null```即使用默认比较函数```EqualityComparer<TKey>.Default```。
+预分配构造函数将```bucket```和```entries```两个数组以```capacity```大小初始化，而以容器作为参数的构造函数则不停迭代，将参数容器的元素依次```Add```到新创建的```Dictionary```当中。```comparer```为hashkey的查找比较函数，传入```null```即使用默认比较函数```EqualityComparer<TKey>.Default```。
 
 ### 扩容机制
 ***
