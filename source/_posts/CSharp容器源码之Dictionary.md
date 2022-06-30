@@ -42,7 +42,7 @@ private|Object| _syncRoot|多线程下使用的同步对象，不过现在基本
         }
 ```
 
-虽然数据都是存储在一个名为```entries```的数组中，但是```entry```之间的逻辑结构实际上为链表结构, 即相同```bucket```映射位置的```entry```会通过```next```"指针"串联起来。至于为什么不直接用链表，个人猜测是使用数组能够保证一段内存的连续性，而真的使用纯指针链表来访问，内存数据会变得更碎片化，更容易cache miss，从而导致访问效率变低。
+虽然数据都是存储在一个名为```entries```的数组中，但是```entry```之间的逻辑结构实际上为链表结构, 即相同```bucket```映射位置的```entry```会通过```next```"指针"串联起来。至于为什么不直接用链表，个人猜测是使用数组能够保证一段内存的连续性，而如果使用单一指针指向的不同内存块来构建链表，内存数据会变得更碎片化，更容易cache miss，从而导致访问效率变低。
 
 ### 构造函数
 ***
@@ -88,13 +88,14 @@ public Dictionary(int capacity, IEqualityComparer<TKey> comparer)
 public Dictionary(IDictionary<TKey,TValue> dictionary,IEqualityComparer<TKey> comparer)
 
 ```
-预分配构造函数将```bucket```和```entries```两个数组以```capacity```大小初始化，而以另一容器作为参数的构造函数则不停循环将参数容器的元素依次```Add```到新创建的```Dictionary```当中。
+预分配构造函数将```bucket```和```entries```两个数组以```capacity```大小初始化，而以容器作为参数的构造函数则不停迭代，将参数容器的元素依次```Add```到新创建的```Dictionary```当中。
 
 ```comparer```为hashkey的查找比较函数，传入```null```即使用默认比较函数```EqualityComparer<TKey>.Default```。
 
 ### 扩容机制
 ***
-扩容的时机与```List```类似，即在``Insert``插入新元素时如果容器元素数量达到上限触发，关键代码如下。
+扩容的时机与```List```雷同，即在``Insert``插入新元素时如果容器元素数量达到上限触发，关键代码如下。
+
 
 ```CSharp
         private void Resize() {
