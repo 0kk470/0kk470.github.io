@@ -182,7 +182,7 @@ public Dictionary(IDictionary<TKey,TValue> dictionary,IEqualityComparer<TKey> co
 
 关于这个问题可以参考[stackoverflow上的讨论](https://stackoverflow.com/questions/4638520/why-net-dictionaries-resize-to-prime-numbers)以及[这篇博客](https://blog.csdn.net/zhishengqianjun/article/details/79087525#23)。
 
-结论就是: 在大多数情况下，对于一组数列中的任意数字```n```，如果它的公因数数量越少，那么该数列经散列后的新数字在新的哈希数组上分布就越均匀，即发生哈希冲突的概率就越小。而素数的公因数为```1```和它本身，公因数最少，所以每次扩容都尽可能地选择素数作为新容量大小。
+结论就是: 在大多数情况下，对于一组数列```a(n)```，如果它数列长度的公因数数量越少，那么该数列中的数字经散列后形成的新数字在哈希表上分布就越均匀，即发生哈希冲突的概率就越小。而素数的公因数为```1```和它本身，公因数最少，所以每次扩容都尽可能地选择素数作为新容量大小。
 
 ### 哈希冲突过多的优化
 
@@ -200,7 +200,7 @@ public Dictionary(IDictionary<TKey,TValue> dictionary,IEqualityComparer<TKey> co
 ***
 主要就查找、添加、删除几个操作相关的函数，并辅以图像说明下。
 
-假设先初始化了一个容量大小为5的哈希表
+假设先初始化了一个容量大小为```5```的哈希表
 ```CSharp
 var dict = new Dictionary<string,int>(5);
 ```
@@ -209,7 +209,7 @@ var dict = new Dictionary<string,int>(5);
 ![structure](1.png)
 
 #### 插入
-不管是```Add```也好还是直接通过操作符```[]```赋值,最终都会调用一个```Insert```函数，代码如下
+不管是```Add```还是操作符```[]```赋值, 最终都会调用一个```Insert```函数，代码如下
 ```CSharp
         private void Insert(TKey key, TValue value, bool add) {
         
@@ -286,23 +286,22 @@ var dict = new Dictionary<string,int>(5);
  
         }
 ```
-可以看到如果之前并没有预分配容量(```buckets```为```null```)，那么会先通过```Intialize```函数给```buckets```和```entries```数组分配内存，之后就是嗲用```comapre.GetHashCode```分配哈希码，注意这里得到的哈希码要和最大正整数数```0x7FFFFFFF```进行位且运算来去掉符号位（不能是负数），这样之后通过和```buckets```的容量大小```length```进行模除运算就能达到插入的```哈希key```在```buckets```数组上映射的位置。之后就是分为两种情况:
-1. 更新操作, 如果相同```bucket```位置的```entry```存在，并且```entry```的hashcode与计算后的hashcode一致，而且也不是```Add```操作，那么就更新```entry```存储的值，否则就会抛出重复添加元素的异常。
-2. 插入操作, 会先检查有没有空的```entry```节点（```FreeCount``` > 0 ,``` Remove```操作后留下的空位置）, 如果有空节点那么会优先使用空节点```freeList```(```Remove```后留下的所有空节点会串连成一个缓存链表，这里的```freeList```指向的其实就是缓存链表的头节点)，然后使用头插法将其插入对应```bucket```位置指向的链表，否则就将count加1，然后选用entries[count]位置的节点
+可以看到如果之前并没有预分配容量(```buckets```为```null```)，那么会先通过```Intialize```函数给```buckets```和```entries```数组分配内存，之后就是调用```comapre.GetHashCode```分配```hashcode```，注意这里得到的```hashcode```要和最大正整数数```0x7FFFFFFF```进行位且运算来去掉符号位（不能是负数），这样之后通过和```buckets```的容量大小```length```进行模除运算就能得到```hashcode```在```buckets```数组上映射的位置。之后就是分为两种情况:
+1. 更新操作, 如果相同```bucket```位置的```entry```存在，并且```entry```的```hashcode```与计算后的```hashcode```一致，而且也不是```Add```操作，那么就更新```entry```存储的值，否则就会抛出重复添加元素的异常。
+2. 插入操作, 会先检查有没有空的```entry```节点（```FreeCount``` > 0 ,```Remove```后留下的所有空节点会串连成一个缓存链表）, 如果有空节点那么会优先使用空节点```freeList```(```freeList```指向的其实就是缓存链表的头节点)，然后使用头插法将其插入对应```bucket```位置指向的链表，否则就将```count```加1，然后选用```entries[count]```位置的节点作为新数据存放节点。之后就是上文提到的判断哈希冲突是否过多从而进行重新哈希的逻辑。
 
-之后就是上文提到的判断哈希冲突是否过多从而进行重新哈希的逻辑。
-举例来说，假如我们对上文的dict指向多次插入操作，而且它们的Hash码都是21，在bucket上映射的位置为1。
+接下来画图举例说明, 假如我们对上文的dict指向多次插入操作，而且它们的```hashcode```都是```21```，那么在```bucket```上映射的位置为```1```。
 ```CSharp
 dict.Add("A", 1);
 dict.Add("B", 2);
 dict.Add("C", 3);
 ```
-那么执行上述操作后，结构如下图
+执行上述操作后，结构如下图
 
 ![2](2.png)
 
 #### 删除
-删除的逻辑比较简单, 先将```key```转换为```hashcode```，然后再转换为```buckets```中的位置，之后就是遍历比较```bucket```位置指向的链表比较```hashcode```，如果相等则清除对应位置的```entry```数据，并将其放入到```freelist```链表上缓存起来以方便下次```Insert```操作复用。代码如下:
+删除的逻辑比较简单, 先将```key```转换为```hashcode```，然后再转换为```buckets```中的位置，之后就是遍历```bucket```位置指向的链表来比较```hashcode```，如果相等则清除对应位置的```entry```数据，并将其放入到```freelist```链表上缓存起来以方便下次```Insert```操作复用。代码如下:
 ```Csharp
         public bool Remove(TKey key) {
             if(key == null) {
@@ -407,4 +406,4 @@ private int FindEntry(TKey key) {
 1. ```foreach```循环内不要去增删元素。
 2. 如果要批量删除元素，用一个```List```存储好要删除的```key```，然后在```List```的循环中执行```Remove```操作。
 3. 与```List```类似的扩容机制，所以在确定容量的情况下尽可能地预分配好空间。
-4. 避免频繁增删元素，频繁的增删操作会导致```entries```的链表逻辑结构顺序变化，每次foreach的顺序也可能会因此不同。类似情况下建议换用```SortedDictionary```。
+4. 避免频繁增删元素，频繁的增删操作会导致```entries```的链表逻辑结构顺序变化，```foreach```的顺序也可能会因此不同。在这种情况下建议换用```SortedDictionary```。
