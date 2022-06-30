@@ -124,9 +124,12 @@ public Dictionary(IDictionary<TKey,TValue> dictionary,IEqualityComparer<TKey> co
             entries = newEntries;
         }
 ```
-其中扩容调用的是```Resize()```函数，在通过```ExpandPrime```函数确定新容量大小后，则会分配重新分配buckets和entries的数组大小，并将数据Copy过去，另外entry之间
+其中扩容调用的是```Resize()```函数，在通过```ExpandPrime```函数确定新容量大小后，则会分配重新分配buckets和entries的数组大小，并将数据Copy过去。
 
-在这有一个扩容的优化算法来降低哈希冲突: 分配的新容器大小为与 ```2倍于目前容器容量大小``` 最接近的``最小素数``。
+### 减少哈希冲突的优化
+***
+
+在扩容时优化算法来降低哈希冲突: 分配的新容器大小为与 ```2倍于目前容器容量大小``` 最接近的``最小素数``。
 ```CSharp
         public static readonly int[] primes = {
             3, 7, 11, 17, 23, 29, 37, 47, 59, 71, 89, 107, 131, 163, 197, 239, 293, 353, 431, 521, 631, 761, 919,
