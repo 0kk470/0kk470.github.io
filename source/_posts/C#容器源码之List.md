@@ -24,7 +24,7 @@ categories: 源码剖析
 private|泛型数组|_items_| 存储目标数据类型的数组
 private|int|_size_|当前数组内的条目数量
 private|int|_version|数据版本，用于校验对数组的操作是否合法
-private|int|_syncRoot_|多线程下使用的同步对象，不过现在基本废弃了，多线程下最好用```ConcurrentBag```
+private|Object|_syncRoot_|多线程下使用的同步对象，不过现在基本废弃了，多线程下最好用```ConcurrentBag```
 private static| 泛型数组|_emptyArray| 默认构造函数内_items初始化指向的只读数组
 
 ### 构造函数
