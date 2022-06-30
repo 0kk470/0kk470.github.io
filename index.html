@@ -162,6 +162,331 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/06/30/C#%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BDictionary/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0kk470">
+      <meta itemprop="description" content="咸鱼KK的随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="saltyfishkk">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/06/30/C#%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BDictionary/" class="post-title-link" itemprop="url">C#容器源码之Dictionary</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-06-30 13:15:31 / 修改时间：14:36:02" itemprop="dateCreated datePublished" datetime="2022-06-30T13:15:31+08:00">2022-06-30</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/" itemprop="url" rel="index"><span itemprop="name">源码剖析</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>复习下<code>Dictionary</code>的一些知识点。</p>
+<p><a target="_blank" rel="noopener" href="https://referencesource.microsoft.com/#mscorlib/system/collections/generic/dictionary.cs">源码地址</a>。</p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><hr>
+<p>   泛型的哈希表, 通过把关键码值映射到表中一个位置来访问数据，以加快查找的速度，是一种键值对关系的集合，底层为两个数组<code>buckets</code>和<code>entries</code>。</p>
+<h3 id="成员变量"><a href="#成员变量" class="headerlink" title="成员变量"></a>成员变量</h3><hr>
+<table>
+<thead>
+<tr>
+<th>修饰符</th>
+<th align="center">类型</th>
+<th align="right">变量名</th>
+<th align="right">作用简述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>private</td>
+<td align="center">int数组</td>
+<td align="right">buckets</td>
+<td align="right">hashkey映射数组</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">Entry数组</td>
+<td align="right">entries</td>
+<td align="right">存储所有要查找的值的数组</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right">count</td>
+<td align="right">容器内当前的元素数量</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right">version</td>
+<td align="right">数据版本，用于校验对数组的操作是否合法</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right">freeList</td>
+<td align="right">当前entries中指向的空节点</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right">freeCount</td>
+<td align="right">空节点数量</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">IEqualityComparer<TKey></td>
+<td align="right">comparer</td>
+<td align="right">用于查找时比较hashkey</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">KeyCollection</td>
+<td align="right">keys</td>
+<td align="right">键集合，惰性生成</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">ValueCollection</td>
+<td align="right">values</td>
+<td align="right">值集合，惰性生成</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">Object</td>
+<td align="right">_syncRoot</td>
+<td align="right">多线程下使用的同步对象，不过现在基本废弃了， 多线程建议使用<code>ConcurrentDictionary</code></td>
+</tr>
+</tbody></table>
+<h3 id="Entry结构"><a href="#Entry结构" class="headerlink" title="Entry结构"></a>Entry结构</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">struct</span> Entry &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">int</span> hashCode;    <span class="comment">// Lower 31 bits of hash code, -1 if unused</span></span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">int</span> next;        <span class="comment">// Index of next entry, -1 if last</span></span><br><span class="line">    <span class="keyword">public</span> TKey key;           <span class="comment">// Key of entry</span></span><br><span class="line">    <span class="keyword">public</span> TValue <span class="keyword">value</span>;         <span class="comment">// Value of entry</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>虽然数据都是存储在一个名为<code>entries</code>的数组中，但是<code>entry</code>之间的逻辑结构实际上为链表结构, 即相同<code>bucket</code>映射位置的<code>entry</code>会通过<code>next</code>“指针”串联起来。至于为什么不直接用链表，个人猜测是使用数组能够保证一段内存的连续性，而真的使用纯指针链表来访问，内存数据会变得更碎片化，更容易cache miss，从而导致访问效率变低。</p>
+<h3 id="构造函数"><a href="#构造函数" class="headerlink" title="构造函数"></a>构造函数</h3><hr>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">Dictionary</span>(<span class="params"></span>): <span class="title">this</span>(<span class="params"><span class="number">0</span>, <span class="literal">null</span></span>)</span> &#123;&#125;</span><br><span class="line"> </span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">Dictionary</span>(<span class="params"><span class="built_in">int</span> capacity</span>): <span class="title">this</span>(<span class="params">capacity, <span class="literal">null</span></span>)</span> &#123;&#125;</span><br><span class="line"> </span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">Dictionary</span>(<span class="params">IEqualityComparer&lt;TKey&gt; comparer</span>): <span class="title">this</span>(<span class="params"><span class="number">0</span>, comparer</span>)</span> &#123;&#125;</span><br><span class="line"> </span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">Dictionary</span>(<span class="params"><span class="built_in">int</span> capacity, IEqualityComparer&lt;TKey&gt; comparer</span>)</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (capacity &lt; <span class="number">0</span>) ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.capacity);</span><br><span class="line">            <span class="keyword">if</span> (capacity &gt; <span class="number">0</span>) Initialize(capacity);</span><br><span class="line">            <span class="keyword">this</span>.comparer = comparer ?? EqualityComparer&lt;TKey&gt;.Default;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> FEATURE_CORECLR</span></span><br><span class="line">            <span class="keyword">if</span> (HashHelpers.s_UseRandomizedStringHashing &amp;&amp; comparer == EqualityComparer&lt;<span class="built_in">string</span>&gt;.Default)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">this</span>.comparer = (IEqualityComparer&lt;TKey&gt;) NonRandomizedStringEqualityComparer.Default;</span><br><span class="line">            &#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> // FEATURE_CORECLR</span></span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">Dictionary</span>(<span class="params">IDictionary&lt;TKey,TValue&gt; dictionary</span>): <span class="title">this</span>(<span class="params">dictionary, <span class="literal">null</span></span>)</span> &#123;&#125;</span><br><span class="line"> </span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">Dictionary</span>(<span class="params">IDictionary&lt;TKey,TValue&gt; dictionary, IEqualityComparer&lt;TKey&gt; comparer</span>):</span></span><br><span class="line"><span class="function">            <span class="title">this</span>(<span class="params">dictionary != <span class="literal">null</span>? dictionary.Count: <span class="number">0</span>, comparer</span>)</span> &#123;</span><br><span class="line"> </span><br><span class="line">            <span class="keyword">if</span>( dictionary == <span class="literal">null</span>) &#123;</span><br><span class="line">                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.dictionary);</span><br><span class="line">            &#125;</span><br><span class="line"> </span><br><span class="line">            <span class="keyword">foreach</span> (KeyValuePair&lt;TKey,TValue&gt; pair <span class="keyword">in</span> dictionary) &#123;</span><br><span class="line">                Add(pair.Key, pair.Value);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到关键的构造函数主要为以下两个函数，一个预分配容量，一个以另一个键值对容器初始化。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Dictionary</span>(<span class="params"><span class="built_in">int</span> capacity, IEqualityComparer&lt;TKey&gt; comparer</span>)</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Dictionary</span>(<span class="params">IDictionary&lt;TKey,TValue&gt; dictionary,IEqualityComparer&lt;TKey&gt; comparer</span>)</span></span><br><span class="line"><span class="function"></span></span><br></pre></td></tr></table></figure>
+<p>预分配构造函数将<code>bucket</code>和<code>entries</code>两个数组以<code>capacity</code>大小初始化，而以另一容器作为参数的构造函数则不停循环将参数容器的元素依次<code>Add</code>到新创建的<code>Dictionary</code>当中。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">### 扩容机制</span><br><span class="line">***</span><br><span class="line">扩容的时机与```List```类似，即在``Insert``插入新元素时如果容器元素数量达到上限触发，关键代码如下。</span><br><span class="line"></span><br><span class="line">```CSharp</span><br><span class="line">        private void Resize() &#123;</span><br><span class="line">            Resize(HashHelpers.ExpandPrime(count), false);</span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">        private void Resize(int newSize, bool forceNewHashCodes) &#123;</span><br><span class="line">            Contract.Assert(newSize &gt;= entries.Length);</span><br><span class="line">            int[] newBuckets = new int[newSize];</span><br><span class="line">            for (int i = 0; i &lt; newBuckets.Length; i++) newBuckets[i] = -1;</span><br><span class="line">            Entry[] newEntries = new Entry[newSize];</span><br><span class="line">            Array.Copy(entries, 0, newEntries, 0, count);</span><br><span class="line">            if(forceNewHashCodes) &#123;</span><br><span class="line">                for (int i = 0; i &lt; count; i++) &#123;</span><br><span class="line">                    if(newEntries[i].hashCode != -1) &#123;</span><br><span class="line">                        newEntries[i].hashCode = (comparer.GetHashCode(newEntries[i].key) &amp; 0x7FFFFFFF);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            for (int i = 0; i &lt; count; i++) &#123;</span><br><span class="line">                if (newEntries[i].hashCode &gt;= 0) &#123;</span><br><span class="line">                    int bucket = newEntries[i].hashCode % newSize;</span><br><span class="line">                    newEntries[i].next = newBuckets[bucket];</span><br><span class="line">                    newBuckets[bucket] = i;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            buckets = newBuckets;</span><br><span class="line">            entries = newEntries;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<p>其中扩容调用的是<code>Resize()</code>函数，在通过<code>ExpandPrime</code>函数确定新容量大小后，则会分配重新分配buckets和entries的数组大小，并将数据Copy过去，另外entry之间</p>
+<p>在这有一个扩容的优化算法来降低哈希冲突: 分配的新容器大小为与 <code>2倍于目前容器容量大小</code> 最接近的<code>最小素数</code>。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">readonly</span> <span class="built_in">int</span>[] primes = &#123;</span><br><span class="line">    <span class="number">3</span>, <span class="number">7</span>, <span class="number">11</span>, <span class="number">17</span>, <span class="number">23</span>, <span class="number">29</span>, <span class="number">37</span>, <span class="number">47</span>, <span class="number">59</span>, <span class="number">71</span>, <span class="number">89</span>, <span class="number">107</span>, <span class="number">131</span>, <span class="number">163</span>, <span class="number">197</span>, <span class="number">239</span>, <span class="number">293</span>, <span class="number">353</span>, <span class="number">431</span>, <span class="number">521</span>, <span class="number">631</span>, <span class="number">761</span>, <span class="number">919</span>,</span><br><span class="line">    <span class="number">1103</span>, <span class="number">1327</span>, <span class="number">1597</span>, <span class="number">1931</span>, <span class="number">2333</span>, <span class="number">2801</span>, <span class="number">3371</span>, <span class="number">4049</span>, <span class="number">4861</span>, <span class="number">5839</span>, <span class="number">7013</span>, <span class="number">8419</span>, <span class="number">10103</span>, <span class="number">12143</span>, <span class="number">14591</span>,</span><br><span class="line">    <span class="number">17519</span>, <span class="number">21023</span>, <span class="number">25229</span>, <span class="number">30293</span>, <span class="number">36353</span>, <span class="number">43627</span>, <span class="number">52361</span>, <span class="number">62851</span>, <span class="number">75431</span>, <span class="number">90523</span>, <span class="number">108631</span>, <span class="number">130363</span>, <span class="number">156437</span>,</span><br><span class="line">    <span class="number">187751</span>, <span class="number">225307</span>, <span class="number">270371</span>, <span class="number">324449</span>, <span class="number">389357</span>, <span class="number">467237</span>, <span class="number">560689</span>, <span class="number">672827</span>, <span class="number">807403</span>, <span class="number">968897</span>, <span class="number">1162687</span>, <span class="number">1395263</span>,</span><br><span class="line">    <span class="number">1674319</span>, <span class="number">2009191</span>, <span class="number">2411033</span>, <span class="number">2893249</span>, <span class="number">3471899</span>, <span class="number">4166287</span>, <span class="number">4999559</span>, <span class="number">5999471</span>, <span class="number">7199369</span>&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*......Other Code......*/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Returns size of hashtable to grow to.</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="built_in">int</span> <span class="title">ExpandPrime</span>(<span class="params"><span class="built_in">int</span> oldSize</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">int</span> newSize = <span class="number">2</span> * oldSize;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// Allow the hashtables to grow to maximum possible size (~2G elements) before encoutering capacity overflow.</span></span><br><span class="line">    <span class="comment">// Note that this check works even when _items.Length overflowed thanks to the (uint) cast</span></span><br><span class="line">    <span class="keyword">if</span> ((<span class="built_in">uint</span>)newSize &gt; MaxPrimeArrayLength &amp;&amp; MaxPrimeArrayLength &gt; oldSize)</span><br><span class="line">    &#123;</span><br><span class="line">        Contract.Assert( MaxPrimeArrayLength == GetPrime(MaxPrimeArrayLength), <span class="string">&quot;Invalid MaxPrimeArrayLength&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> MaxPrimeArrayLength;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">return</span> GetPrime(newSize);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="built_in">int</span> <span class="title">GetPrime</span>(<span class="params"><span class="built_in">int</span> min</span>)</span> </span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (min &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> ArgumentException(Environment.GetResourceString(<span class="string">&quot;Arg_HTCapacityOverflow&quot;</span>));</span><br><span class="line">    Contract.EndContractBlock();</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; primes.Length; i++) </span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">int</span> prime = primes[i];</span><br><span class="line">        <span class="keyword">if</span> (prime &gt;= min) <span class="keyword">return</span> prime;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">//outside of our predefined table. </span></span><br><span class="line">    <span class="comment">//compute the hard way. </span></span><br><span class="line">    <span class="keyword">for</span> (<span class="built_in">int</span> i = (min | <span class="number">1</span>); i &lt; Int32.MaxValue;i+=<span class="number">2</span>) </span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (IsPrime(i) &amp;&amp; ((i - <span class="number">1</span>) % Hashtable.HashPrime != <span class="number">0</span>))</span><br><span class="line">            <span class="keyword">return</span> i;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> min;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>为什么每次扩容的容量大小都为素数?</p>
+<p>关于这个问题可以参考<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/4638520/why-net-dictionaries-resize-to-prime-numbers">stackoverflow上的讨论</a>以及<a target="_blank" rel="noopener" href="https://blog.csdn.net/zhishengqianjun/article/details/79087525#23">这篇博客</a>。</p>
+<p>结论就是: 在大多数情况下，对于一组数列中的任意数字<code>n</code>，如果它的公因数数量越少，那么该数列经散列后的新数字在新的哈希数组上分布就越均匀，即发生哈希冲突的概率就越小。而素数的公因数为<code>1</code>和它本身，公因数最少，所以每次扩容都尽可能地选择素数作为新容量大小。</p>
+<h3 id="哈希冲突过多的优化"><a href="#哈希冲突过多的优化" class="headerlink" title="哈希冲突过多的优化"></a>哈希冲突过多的优化</h3><p>在<code>Insert</code>时发生了过多哈希冲突（超过<code>100次</code>）则会调用<code>Resize</code>来重新获取所有<code>hashcode</code>。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(collisionCount &gt; HashHelpers.HashCollisionThreshold &amp;&amp; HashHelpers.IsWellKnownEqualityComparer(comparer)) </span><br><span class="line">&#123;</span><br><span class="line">    comparer = (IEqualityComparer&lt;TKey&gt;) HashHelpers.GetRandomizedEqualityComparer(comparer);</span><br><span class="line">    Resize(entries.Length, <span class="literal">true</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关键函数</p>
+<p>TODO</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/06/09/C#%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BList/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0kk470">
+      <meta itemprop="description" content="咸鱼KK的随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="saltyfishkk">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/06/09/C#%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BList/" class="post-title-link" itemprop="url">C#容器源码之List</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-06-09 22:33:49" itemprop="dateCreated datePublished" datetime="2022-06-09T22:33:49+08:00">2022-06-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-06-30 13:24:15" itemprop="dateModified" datetime="2022-06-30T13:24:15+08:00">2022-06-30</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/" itemprop="url" rel="index"><span itemprop="name">源码剖析</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>复习下<code>List</code>的一些知识点。</p>
+<p><a target="_blank" rel="noopener" href="https://referencesource.microsoft.com/#mscorlib/system/collections/generic/list.cs">源码地址</a>。</p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><hr>
+<p>   可通过下标索引访问的强类型列表，连续性存储结构，底层为数组，可动态扩容。</p>
+<h3 id="成员变量"><a href="#成员变量" class="headerlink" title="成员变量"></a>成员变量</h3><hr>
+<table>
+<thead>
+<tr>
+<th>修饰符</th>
+<th align="center">类型</th>
+<th align="right">变量名</th>
+<th align="right">作用简述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>private</td>
+<td align="center">泛型数组</td>
+<td align="right"><em>items</em></td>
+<td align="right">存储目标数据类型的数组</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right"><em>size</em></td>
+<td align="right">当前数组内的条目数量</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right">_version</td>
+<td align="right">数据版本，用于校验对数组的操作是否合法</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">Object</td>
+<td align="right"><em>syncRoot</em></td>
+<td align="right">多线程下使用的同步对象，不过现在基本废弃了，多线程下最好用<code>ConcurrentBag</code></td>
+</tr>
+<tr>
+<td>private static</td>
+<td align="center">泛型数组</td>
+<td align="right">_emptyArray</td>
+<td align="right">默认构造函数内_items初始化指向的只读数组</td>
+</tr>
+</tbody></table>
+<h3 id="构造函数"><a href="#构造函数" class="headerlink" title="构造函数"></a>构造函数</h3><hr>
+<h4 id="1-默认构造函数"><a href="#1-默认构造函数" class="headerlink" title="1. 默认构造函数"></a>1. 默认构造函数</h4><p>不会分配新的数组内存，而是指向一个默认的全局只读空数组，之后进行元素添加操作时才会触发扩容机制。</p>
+<h4 id="2-带容量的构造函数"><a href="#2-带容量的构造函数" class="headerlink" title="2. 带容量的构造函数"></a>2. 带容量的构造函数</h4><p>  会预分配参数<code>capacity</code>指定大小的数组。</p>
+<h4 id="3-使用一组数据的构造函数"><a href="#3-使用一组数据的构造函数" class="headerlink" title="3. 使用一组数据的构造函数"></a>3. 使用一组数据的构造函数</h4><p>  如果传入的本身是一个容器<code>ICollection&lt;T&gt;</code>, 那么会使用这个容器的大小来初始化数组, 然后将容器数据元素拷贝到分配好的数组中去; 如果仅仅是<code>IEnumrable&lt;T&gt;</code>, 那么使用迭代器不停地将一个个元素<code>Add</code>，这其中会触发多次扩容。因此如果可以的话，尽量传入容器来初始化<code>List</code>。</p>
+<h3 id="扩容机制"><a href="#扩容机制" class="headerlink" title="扩容机制"></a>扩容机制</h3><p>   在向<code>List</code>中添加新元素时(调用<code>Add</code>、<code>Insert</code>、<code>AddRange</code>等)，会先调用一次<code>EnsureCapacity</code>来保证数组的容量足够容纳新的元素。如果是空数组，那么会以初始为<code>4</code>的容量来初始化，否则的话就会分配一个当前数组的长度<code>2</code>倍的新数组，然后再将当前数组的所有元素拷贝过去，时间复杂度为<code>O(n)</code>，因此在编写代码时，如果能预估<code>List</code>使用容量的话，那么最好是提前预分配容量，减少频繁扩容带来的开销。</p>
+   <figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">   <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">EnsureCapacity</span>(<span class="params"><span class="built_in">int</span> min</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (_items.Length &lt; min) &#123;</span><br><span class="line">        <span class="built_in">int</span> newCapacity = _items.Length == <span class="number">0</span>? _defaultCapacity : _items.Length * <span class="number">2</span>;</span><br><span class="line">        <span class="keyword">if</span> ((<span class="built_in">uint</span>)newCapacity &gt; Array.MaxArrayLength) newCapacity = Array.MaxArrayLength;</span><br><span class="line">        <span class="keyword">if</span> (newCapacity &lt; min) newCapacity = min;</span><br><span class="line">        Capacity = newCapacity;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">public</span> <span class="built_in">int</span> Capacity &#123;</span><br><span class="line">    <span class="keyword">get</span> &#123;</span><br><span class="line">        Contract.Ensures(Contract.Result&lt;<span class="built_in">int</span>&gt;() &gt;= <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">return</span> _items.Length;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">set</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">value</span> &lt; _size) &#123;</span><br><span class="line">            ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.<span class="keyword">value</span>, ExceptionResource.ArgumentOutOfRange_SmallCapacity);</span><br><span class="line">        &#125;</span><br><span class="line">        Contract.EndContractBlock();</span><br><span class="line"> </span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">value</span> != _items.Length) &#123;</span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">value</span> &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                T[] newItems = <span class="keyword">new</span> T[<span class="keyword">value</span>];</span><br><span class="line">                <span class="keyword">if</span> (_size &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                    Array.Copy(_items, <span class="number">0</span>, newItems, <span class="number">0</span>, _size);</span><br><span class="line">                &#125;</span><br><span class="line">                _items = newItems;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> &#123;</span><br><span class="line">                _items = _emptyArray;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="关键函数"><a href="#关键函数" class="headerlink" title="关键函数"></a>关键函数</h3><hr>
+<h4 id="Insert"><a href="#Insert" class="headerlink" title="Insert"></a>Insert</h4><p>   先检测是否需要扩容，然后朝指定下标位置插入一个元素，会使用<code>Array.Copy</code>将目标位置之后的元素往后挪一位，因此不建议频繁在列表前段进行插入操作。<br>   <figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Insert</span>(<span class="params"><span class="built_in">int</span> index, Object item</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">   \*....*\</span><br><span class="line">   <span class="keyword">if</span> (index &lt; _size) &#123;</span><br><span class="line">      Array.Copy(_items, index, _items, index + <span class="number">1</span>, _size - index);</span><br><span class="line">   &#125;</span><br><span class="line">   \*....*\</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="InsertRange"><a href="#InsertRange" class="headerlink" title="InsertRange"></a>InsertRange</h4><p>   先检测扩容,然后尝试转换为<code>ICollection&lt;T&gt;</code>，如果不是<code>ICollection&lt;T&gt;</code>（即<code>IEnumrable&lt;T&gt;</code>)，那么会使用迭代器循环不停地去调用<code>Insert</code>（数量很大的话会有一定性能开销)。<br>   之后与<code>Insert</code>类似，将目标位置后元素往后挪，将插入的元素拷贝过去，拷贝时会生成一个临时数组来存放要拷贝的元素( 这里有一个优化点：如果被拷贝元素的容器和目标容器本来就是同一个，那么不需要分配新的临时数组，而是复用当前操作的数组)。<br>   <figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">   <span class="comment">// If we&#x27;re inserting a List into itself, we want to be able to deal with that.</span></span><br><span class="line"><span class="keyword">if</span> (<span class="keyword">this</span> == c) &#123;</span><br><span class="line">    <span class="comment">// Copy first part of _items to insert location</span></span><br><span class="line">    Array.Copy(_items, <span class="number">0</span>, _items, index, index);</span><br><span class="line">    <span class="comment">// Copy last part of _items back to inserted location</span></span><br><span class="line">    Array.Copy(_items, index + count, _items, index*<span class="number">2</span>, _size-index);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span> &#123;</span><br><span class="line">    T[] itemsToInsert = <span class="keyword">new</span> T[count];</span><br><span class="line">    c.CopyTo(itemsToInsert, <span class="number">0</span>);</span><br><span class="line">    itemsToInsert.CopyTo(_items, index);                    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="Add"><a href="#Add" class="headerlink" title="Add"></a>Add</h3><p>   先检测扩容，然后在当前列表末尾增添一个元素。还有一个非泛型的版本，传入的元素为<code>Object</code>，会尝试使用强制转换来添加新元素。<br>   <figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123; </span><br><span class="line">    Add((T) item);            </span><br><span class="line">&#125;</span><br><span class="line">catch (InvalidCastException) &#123; </span><br><span class="line">    ThrowHelper.ThrowWrongValueTypeArgumentException(item, <span class="keyword">typeof</span>(T));            </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="AddRange"><a href="#AddRange" class="headerlink" title="AddRange"></a>AddRange</h4><p>   直接调用的<code>InsertRange</code>，传入的<code>index</code>为当前数组长度，即在数组末尾插入一组新的元素。</p>
+<h4 id="RemoveAt"><a href="#RemoveAt" class="headerlink" title="RemoveAt"></a>RemoveAt</h4><p>   将指定下标位置的元素移除，然后调用<code>Array.Copy</code>将后续元素往前挪</p>
+<h4 id="Remove"><a href="#Remove" class="headerlink" title="Remove"></a>Remove</h4><p>   遍历<code>List</code>找到该元素的下标，如果存在则调用```RemoveAt``。</p>
+<h4 id="RemoveRange"><a href="#RemoveRange" class="headerlink" title="RemoveRange"></a>RemoveRange</h4><p>   从指定index位置开始移除count个元素，核心代码如下.<br>   <figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (count &gt; <span class="number">0</span>) &#123;</span><br><span class="line">   <span class="built_in">int</span> i = _size;</span><br><span class="line">   _size -= count;</span><br><span class="line">   <span class="keyword">if</span> (index &lt; _size) &#123;</span><br><span class="line">       Array.Copy(_items, index + count, _items, index, _size - index);</span><br><span class="line">   &#125;</span><br><span class="line">   Array.Clear(_items, _size, count);</span><br><span class="line">   _version++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="RemoveAll"><a href="#RemoveAll" class="headerlink" title="RemoveAll"></a>RemoveAll</h4><p>这里算法有点意思，用了双指针的思路，先找到第一个需要被移除的元素下标，这里称为<code>freeindex</code>, 然后开始遍历循环这个<code>List</code>，每次循环都找到与之对应的不需要移除的第一个元素,这里称为<code>current</code>，然后将<code>current</code>元素移动到<code>freeindex</code>元素的位置, <code>current</code>走到末尾循环结束，算法时间复杂度为<code>O(n)</code>, 之后就是将多余的元素Clear掉。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">int</span> <span class="title">RemoveAll</span>(<span class="params">Predicate&lt;T&gt; match</span>)</span> &#123;</span><br><span class="line">      <span class="keyword">if</span>( match == <span class="literal">null</span>) &#123;</span><br><span class="line">          ThrowHelper.ThrowArgumentNullException(ExceptionArgument.match);</span><br><span class="line">      &#125;</span><br><span class="line">      Contract.Ensures(Contract.Result&lt;<span class="built_in">int</span>&gt;() &gt;= <span class="number">0</span>);</span><br><span class="line">      Contract.Ensures(Contract.Result&lt;<span class="built_in">int</span>&gt;() &lt;= Contract.OldValue(Count));</span><br><span class="line">      Contract.EndContractBlock();</span><br><span class="line"></span><br><span class="line">      <span class="built_in">int</span> freeIndex = <span class="number">0</span>;   <span class="comment">// the first free slot in items array</span></span><br><span class="line"></span><br><span class="line">      <span class="comment">// Find the first item which needs to be removed.</span></span><br><span class="line">      <span class="keyword">while</span>( freeIndex &lt; _size &amp;&amp; !match(_items[freeIndex])) freeIndex++;            </span><br><span class="line">      <span class="keyword">if</span>( freeIndex &gt;= _size) <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">      </span><br><span class="line">      <span class="built_in">int</span> current = freeIndex + <span class="number">1</span>;</span><br><span class="line">      <span class="keyword">while</span>( current &lt; _size) &#123;</span><br><span class="line">          <span class="comment">// Find the first item which needs to be kept.</span></span><br><span class="line">          <span class="keyword">while</span>( current &lt; _size &amp;&amp; match(_items[current])) current++;            </span><br><span class="line"></span><br><span class="line">          <span class="keyword">if</span>( current &lt; _size) &#123;</span><br><span class="line">              <span class="comment">// copy item to the free slot.</span></span><br><span class="line">              _items[freeIndex++] = _items[current++];</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;                       </span><br><span class="line">      </span><br><span class="line">      Array.Clear(_items, freeIndex, _size - freeIndex);</span><br><span class="line">      <span class="built_in">int</span> result = _size - freeIndex;</span><br><span class="line">      _size = freeIndex;</span><br><span class="line">      _version++;</span><br><span class="line">      <span class="keyword">return</span> result;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="IndexOf"><a href="#IndexOf" class="headerlink" title="IndexOf"></a>IndexOf</h4><p>找到目标元素在List中的第一次出现的下标位置, 有三个重载版本， 默认是整个数组(<code>Range[0, array.length]</code>)，如果传入<code>index</code>的话则是<code>Range[index, array.length]</code>，额外传入第三个参数<code>count</code>的话，则是从下标index开始后的count的元素(<code>Range[index, index + count]</code>)</p>
+<h4 id="LastIndexOf"><a href="#LastIndexOf" class="headerlink" title="LastIndexOf"></a>LastIndexOf</h4><p>找到目标元素在List中的最后一次出现的下标位置，逻辑和参数与<code>IndexOf</code>类似</p>
+<h4 id="Find"><a href="#Find" class="headerlink" title="Find"></a>Find</h4><p>遍历<code>List</code>， 返回第一个满足条件函数的元素。</p>
+<h4 id="FindIndex"><a href="#FindIndex" class="headerlink" title="FindIndex"></a>FindIndex</h4><p>与<code>Find</code>类似，返回第一个匹配的元素的下标, 可以向IndexOf一样传入额外两个参数<code>index</code>、<code>count</code>指定查找范围。</p>
+<h4 id="FindLast"><a href="#FindLast" class="headerlink" title="FindLast"></a>FindLast</h4><p>遍历<code>List</code>， 返回最后一个满足条件函数的元素，注意既然是最后一个元素，那么可以从数组末尾向首部查找。</p>
+<h4 id="FindLastIndex"><a href="#FindLastIndex" class="headerlink" title="FindLastIndex"></a>FindLastIndex</h4><p>返回最后一个匹配的元素的下标</p>
+<h4 id="Contains"><a href="#Contains" class="headerlink" title="Contains"></a>Contains</h4><p>遍历整个数组，判断某个元素是否在<code>List</code>中</p>
+<h4 id="Exists"><a href="#Exists" class="headerlink" title="Exists"></a>Exists</h4><p>FindIndex的二次包装，判断<code>List</code>是否存在符合条件函数的元素。</p>
+<h4 id="Sort"><a href="#Sort" class="headerlink" title="Sort"></a>Sort</h4><p>排序，具体的排序算法这里不赘述。</p>
+<h4 id="Reverse"><a href="#Reverse" class="headerlink" title="Reverse"></a>Reverse</h4><p>颠倒整个数组，两个重载版本，一个范围是整个数组，另一个版本的范围为<code>Range[index, index + count]</code>。</p>
+<h4 id="TrueForAll"><a href="#TrueForAll" class="headerlink" title="TrueForAll"></a>TrueForAll</h4><p>顾名思义，判断所有元素是否都符合条件函数。</p>
+<h4 id="Clear"><a href="#Clear" class="headerlink" title="Clear"></a>Clear</h4><p>清空整个<code>List</code></p>
+<h4 id="TrimExcess"><a href="#TrimExcess" class="headerlink" title="TrimExcess"></a>TrimExcess</h4><p>将数组容量(<code>Capacity</code>)裁剪到与当前元素数量(<code>Count</code>)一致，在数量达到容量90%的情况下不会生效。</p>
+<pre><code class="Csharp">        public void TrimExcess() &#123;
+            int threshold = (int)(((double)_items.Length) * 0.9);             
+            if( _size &lt; threshold ) &#123;
+                Capacity = _size;                
+            &#125;
+        &#125;
+</code></pre>
+<h3 id="使用总结"><a href="#使用总结" class="headerlink" title="使用总结"></a>使用总结</h3><hr>
+<ol>
+<li>尽量避免频繁在头部增删元素。</li>
+<li>不要在正向循环中去增删元素，否则会导致迭代的下标错位和越界。</li>
+<li>在<code>new</code>一个新的<code>List</code>时，预估好容量，避免多次扩容的开销。另外使用一组数据元素初始化<code>List</code>时，避免使用<code>IEnumrable&lt;T&gt;</code>，尽可能地使用<code>ICollection&lt;T&gt;</code>。</li>
+<li>在确定<code>List</code>不会再扩容的情况下，可以使用TrimExcess裁剪一部分数组空位置</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -208,6 +533,253 @@
 <p>3.在新服务器操作面板，使用之前创建的旧服务器镜像重装系统。<br><img src="/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/4.png" alt="pic4"></p>
 <p>4.关掉旧服务器，在域名解析界面把ip定向到新的服务器公网ip上，另外记得在新服务器的防火墙界面把相关的端口也开放下。<br><img src="/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/5.png" alt="pic5"></p>
 <p>5.登录新服务器测试了相关的功能，除了像jenkins、unity这种需要重新登下账号外，无其他问题。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0kk470">
+      <meta itemprop="description" content="咸鱼KK的随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="saltyfishkk">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/" class="post-title-link" itemprop="url">WindowsServer使用Jenkins自动部署github博客网站的坑</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-02-21 17:13:09" itemprop="dateCreated datePublished" datetime="2022-02-21T17:13:09+08:00">2022-02-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-03-21 20:51:50" itemprop="dateModified" datetime="2022-03-21T20:51:50+08:00">2022-03-21</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>摸索了大半天终于弄好了。</p>
+<p>有关<code>github webhook</code> 和 <code>jenkins</code>的配置可以参考<a target="_blank" rel="noopener" href="https://www.blazemeter.com/blog/how-to-integrate-your-github-repository-to-your-jenkins-project">这篇文章</a>。</p>
+<h1 id="踩坑"><a href="#踩坑" class="headerlink" title="踩坑"></a>踩坑</h1><h3 id="SSL验证的问题"><a href="#SSL验证的问题" class="headerlink" title="SSL验证的问题"></a>SSL验证的问题</h3><hr>
+<p>使用的<code>https</code>来传递信息触发构建事件，结果push上去后<code>github webhook</code>抛了个错误信息。</p>
+<p><img src="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/github_error.png" alt="错误"></p>
+<p>原因是没有配置正确的SSL证书验证，于是从对应的云服务商（我用的腾讯云）那下载了之前申请好的SSL证书，下载格式选择为<code>jks</code>。</p>
+<p><img src="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/download_ssl.png" alt="证书下载"></p>
+<p>将下载好的证书放到jenkins的根目录，然后在配置文件<code>jenkins.xml</code>中的<code>arguments</code>节点项里添加如下参数。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">--httpsKeyStore=&quot;%JENKINS_HOME%\证书名.jks&quot; --httpsKeyStorePassword=&quot;证书校验密码&quot;</span><br></pre></td></tr></table></figure>
+<p><img src="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/argument.png" alt="argument"></p>
+<p>之后重启<code>jenkins</code>，然后让repo对应的webhook页面<code>redelivery</code>一下就行。</p>
+<p><img src="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/redelivery.png" alt="redelivery"></p>
+<h3 id="批处理脚本命令无法执行的问题"><a href="#批处理脚本命令无法执行的问题" class="headerlink" title="批处理脚本命令无法执行的问题"></a>批处理脚本命令无法执行的问题</h3><hr>
+<p>构建时可以让<code>jenkins</code>调用本地bat脚本</p>
+<p><img src="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/build_bat.png" alt="build_bat"></p>
+<p>逻辑如下</p>
+<figure class="highlight bat"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span>  update blog</span><br><span class="line"><span class="built_in">cd</span> ./repo</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> <span class="keyword">exist</span> node_modules\ (</span><br><span class="line">  <span class="built_in">echo</span> skip install npm_module </span><br><span class="line">) <span class="keyword">else</span> (</span><br><span class="line">  <span class="keyword">call</span> npm install</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">call</span> hexo clean</span><br><span class="line"></span><br><span class="line"><span class="keyword">call</span> hexo g</span><br></pre></td></tr></table></figure>
+
+<p>但是会报错找不到<code>npm</code>和<code>hexo</code>等可执行程序。</p>
+<p>原因是jenkins的运行环境是一个独立的沙盒环境，不会用到Windows系统自带的环境变量，所以这些可执行文件的PATH路径需要添加在全局配置当中。该配置在<code>.jenkins</code>文件夹下的<code>config.xml</code>文件里。</p>
+<p><img src="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/config.png" alt="config"></p>
+<p>也可以通过jenkins 图形化控制台的<code>Dashboard -&gt; ConfigureSystem -&gt; Global properties-&gt; Environment variables</code>配置。</p>
+<p><img src="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/gui_config.png" alt="gui_config">。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/02/15/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93%E4%B9%8B%E4%B8%80/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0kk470">
+      <meta itemprop="description" content="咸鱼KK的随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="saltyfishkk">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/02/15/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93%E4%B9%8B%E4%B8%80/" class="post-title-link" itemprop="url">代码整洁之道1 - 命名</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-02-15 19:03:30" itemprop="dateCreated datePublished" datetime="2022-02-15T19:03:30+08:00">2022-02-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-03-21 20:51:50" itemprop="dateModified" datetime="2022-03-21T20:51:50+08:00">2022-03-21</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>《代码整洁之道》的第二章读书笔记整理，示例代码为C#, 逻辑大部分仿照原文使用的Java代码，加入了一些自己思考后的示例。</p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h3 id="1-名副其实"><a href="#1-名副其实" class="headerlink" title="1. 名副其实"></a>1. 名副其实</h3><hr>
+<p>要让别人一看变量、函数或类的名称就该知道它是啥、它做了什么事、它应该怎么用。</p>
+<p>假设有一个与时间相关的变量</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">int</span> d; </span><br></pre></td></tr></table></figure>
+<p>如果直接这么命名，第一次看到这变量的人不容易理解，更好的命名方式如下:</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">int</span> elapsedTimeInDays;</span><br><span class="line"><span class="built_in">int</span> daysSinceCreation;</span><br><span class="line"><span class="built_in">int</span> fileAgeInDays; </span><br></pre></td></tr></table></figure>
+<p>这样变量所代表的含义一目了然。</p>
+<p>以下代码同理，函数名含义模糊不清，另外列表<code>list1</code> 、常量<code>4</code>、迭代变量<code>x</code>等的意义未知。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> List&lt;<span class="built_in">int</span>[]&gt; getThem()</span><br><span class="line">&#123;</span><br><span class="line">    List&lt;<span class="built_in">int</span>[]&gt; list1 = <span class="keyword">new</span> List&lt;<span class="built_in">int</span>[]&gt;();</span><br><span class="line">    <span class="keyword">foreach</span>(<span class="built_in">int</span>[] x <span class="keyword">in</span> theList)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(x[<span class="number">0</span>] == <span class="number">4</span>)</span><br><span class="line">            list1.Add(cell);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> list1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以下为重构后的代码，使用一个类来封装相关的变量与逻辑。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> List&lt;Cell&gt; <span class="title">getFlaggedCells</span>(<span class="params"></span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">var</span> flaggedCells = <span class="keyword">new</span> List&lt;Cell&gt;();</span><br><span class="line">    <span class="keyword">foreach</span>(<span class="keyword">var</span> cell <span class="keyword">in</span> gameboard)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(cell.isFlagged())</span><br><span class="line">            flaggedCells.Add(cell);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> flaggedCells;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-避免误导"><a href="#2-避免误导" class="headerlink" title="2. 避免误导"></a>2. 避免误导</h3><hr>
+<ul>
+<li>避免使用与本意相悖的单词，比如 UniX平台下的 <code>hp</code>、<code>aix</code>、<code>sco</code> 等专有名称不应作为变量名。</li>
+<li>避免使用形如<code>accountList</code> 的名称，除非该变量本身就是<code>List</code>类型，考虑到未来该容器的类型可能会发生改变(比如变成了<code>Dictionary</code>、<code>HashSet</code>之类的)，这个时候<code>accountList</code>的命名就会引起其他开发人员错误的认知，他第一次看到该变量被调用时会认为这是一个<code>List</code>。 </li>
+<li>更好的命名是用 <code>accountGroup</code>、<code>bunchofAccounts</code>，甚至直接用<code>accounts</code>都行。</li>
+</ul>
+<h3 id="3-命名要有区分"><a href="#3-命名要有区分" class="headerlink" title="3. 命名要有区分"></a>3. 命名要有区分</h3><hr>
+<ul>
+<li><p>在同一作用范围内的命名不能太相似。比如</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">copyChars</span>(<span class="params"><span class="built_in">char</span>[] a1, <span class="built_in">char</span>[] a2</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">for</span>(<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; a1.Length; ++i)</span><br><span class="line">        a2[i] = a1[i];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述代码的参数名<code>a1</code>和<code>a2</code>完全可以用<code>source</code>和<code>destination</code>替代，如此的话函数使用者就知道他是将第一个数组的数据拷贝到第二个数组当中。</p>
+</li>
+<li><p>避免意义相近的名称，如<code>ProductData</code>和<code>ProuctInfo</code>这种。</p>
+</li>
+</ul>
+<h3 id="4-可读性良好的命名"><a href="#4-可读性良好的命名" class="headerlink" title="4. 可读性良好的命名"></a>4. 可读性良好的命名</h3><hr>
+<ul>
+<li>使用英文单词对变量进行命名，不要用各种简写或者拼音，以下为不好的命名示例。<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title">DtaRcrd102</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> DateTime genymdhms;</span><br><span class="line">    <span class="keyword">private</span> DateTime modymdhms;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> <span class="built_in">string</span>  pszqint = <span class="string">&quot;102&quot;</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title">Wuqi</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">float</span> chongnengshijian; <span class="comment">//充能时间</span></span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">int</span> danjiarongliang;      <span class="comment">//弹夹容量</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>纠正过后的良好命名如下。<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title">CustomerRecord</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> DateTime generationTime;</span><br><span class="line">    <span class="keyword">private</span> DateTime modificationTime;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> <span class="built_in">string</span>  recordId = <span class="string">&quot;102&quot;</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title">Weapon</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">float</span> chargeTime;</span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">int</span> clipSize;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="5-可搜索命名"><a href="#5-可搜索命名" class="headerlink" title="5. 可搜索命名"></a>5. 可搜索命名</h3><hr>
+<p>尽可能地使用常量定义和单词变量去替代纯数字或者纯字符串，这样其他人想修改值的时候只需要搜索到定义的地方修改就行，不用一个个去找（比如下面这段代码）。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title">Player</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">List</span>&lt;<span class="title">Weapon</span>&gt; m_Weapons</span> = <span class="keyword">new</span> List&lt;Weapon&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">AddWeapon</span>(<span class="params">Weapon newWeapon</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(m_Weapons.Count &gt;= <span class="number">5</span>)</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        m_Weapons.Add(newWeapon);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Weapon <span class="title">GetWeaponAt</span>(<span class="params"><span class="built_in">int</span> idx</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(idx &lt; <span class="number">0</span> || idx &gt;= <span class="number">5</span>)</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        <span class="keyword">return</span> m_Weapons[idx];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以优化为更容易搜索和维护的代码。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title">Player</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">List</span>&lt;<span class="title">Weapon</span>&gt; m_Weapons</span> = <span class="keyword">new</span> List&lt;Weapon&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">const</span> <span class="built_in">int</span> MAX_WEAPON_NUM = <span class="number">5</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">AddWeapon</span>(<span class="params">Weapon newWeapon</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(m_Weapons.Count &gt;= MAX_WEAPON_NUM)</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        m_Weapons.Add(newWeapon);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Weapon <span class="title">GetWeaponAt</span>(<span class="params"><span class="built_in">int</span> idx</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(idx &lt; <span class="number">0</span> || idx &gt;= MAX_WEAPON_NUM)</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        <span class="keyword">return</span> m_Weapons[idx];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样当后续想要修改最大武器数量只需要修改<code>MAX_WEAPON_NUM</code>处即可，也便于维护者按关键字<code>max</code>之类的搜索。</p>
+<h3 id="6-避免使用多余的编码"><a href="#6-避免使用多余的编码" class="headerlink" title="6. 避免使用多余的编码"></a>6. 避免使用多余的编码</h3><hr>
+<ul>
+<li>6.1 匈牙利语标记法<ul>
+<li>即在变量名前添加类型字符。比如<code>iCount</code>表示int类型的Count变量、<code>pUnit</code>表示指向一个Unit类的指针变量等，详细参见百科上的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%8C%88%E7%89%99%E5%88%A9%E5%91%BD%E5%90%8D%E6%B3%95">说明</a>。</li>
+<li>起源是在Windows的C语言API的时代，编译器不做类型检查，程序员需要这种方法来区分句柄、长指针或者void指针等变量的类型。现代高级语言一般不需要这样来做，作者也不建议这么来命名了。</li>
+<li>个人认为对于<code>Lua</code>、<code>Python</code> 这种非强类型的脚本语言来说，这种命名还是可以采取的。</li>
+</ul>
+</li>
+<li>6.2 成员前缀   <ul>
+<li>在类的成员变量(member variables)前添加 <code>m_</code> 后缀, 如上文的<code>Player</code> 里定义的<code>m_Weapons</code>。</li>
+<li>原文作者不建议使用成员前缀。这一点个人不是很赞同， 对于C#来说，在类的成员变量和索引器较多的情况下，还是应该引入前缀来区分。简而言之，视使用环境而定，我个人偏好使用成员前缀。</li>
+</ul>
+</li>
+<li>6.3 接口命名<ul>
+<li>作者也不建议在接口命名前添加大写字母<code>I</code>，比如比起<code>IShapreFactory</code>作者更青睐<code>ShapeFactory</code>。这一点个人也不是很赞同，私以为用这种方式区分好接口类和普通类还是有必要的。</li>
+</ul>
+</li>
+<li>6.4 中文(个人补充)<ul>
+<li>一般来说命名也不要用中文，不同机器如果默认编码不同会经常导致中文乱码。</li>
+</ul>
+</li>
+</ul>
+<h3 id="7-避免思维映射"><a href="#7-避免思维映射" class="headerlink" title="7. 避免思维映射"></a>7. 避免思维映射</h3><hr>
+<p>不要让代码阅读者在脑中把你的命名翻译为他们熟悉的名称，通俗点来说就是不要让命名产生不必要的联想。</p>
+<h3 id="8-命名的词性选择"><a href="#8-命名的词性选择" class="headerlink" title="8. 命名的词性选择"></a>8. 命名的词性选择</h3><hr>
+<ul>
+<li>类名、对象名应使用名词或者名词短语，比如 <code>Customer</code>、<code>WikiPage</code>、<code>Account</code>。</li>
+<li>方法、函数使用动词或者动词短语，比如<code>postPayment</code>、<code>deletePage</code>、<code>Save</code>等。</li>
+</ul>
+<h3 id="9-不要扮可爱"><a href="#9-不要扮可爱" class="headerlink" title="9. 不要扮可爱"></a>9. 不要扮可爱</h3><p>不要取一些自己认为很cool的名字，不要抖机灵。比如一个简单的<code>DeleteItem</code>函数不要写成<code>WipeOutTheUseless</code>之类的。</p>
+<h3 id="10-命名概念明确单一"><a href="#10-命名概念明确单一" class="headerlink" title="10. 命名概念明确单一"></a>10. 命名概念明确单一</h3><hr>
+<ul>
+<li>不要混用相同概念的词，每个抽象概念选一个词，并且一以贯之。比如不要在项目中同时有<code>xxxManager</code>、<code>xxxController</code>、<code>xxxDriver</code>这类相同意义的名词，选其中一种就行了。</li>
+<li>不要在不合适的情况下使用双关语。比如 <code>Add</code> 函数这种，在一个类当中它可能表示将两个值相加，也可能表示将一条数据条目添加到指定集合当中，如果出现了这种情况可以考虑换成<code>Append</code>或者<code>Insert</code>。</li>
+</ul>
+<h3 id="11-使用项目开发人员都熟悉的名称"><a href="#11-使用项目开发人员都熟悉的名称" class="headerlink" title="11. 使用项目开发人员都熟悉的名称"></a>11. 使用项目开发人员都熟悉的名称</h3><hr>
+<ul>
+<li>使用解决方案领域的名称。</li>
+<li>使用源自所涉问题领域的名称。</li>
+</ul>
+<h3 id="12-符合语境"><a href="#12-符合语境" class="headerlink" title="12. 符合语境"></a>12. 符合语境</h3><hr>
+<ul>
+<li><p>添加有意义的语境</p>
+<ul>
+<li>一个函数中出现了<code>state</code>变量，如果代码阅读者最开始理解不了这个变量的意义，他就得去定向到这个state的定义处，结合定义所在行的上下文来理解，导致花费更多的时间来熟悉代码。</li>
+<li>比如在一个名为<code>Player</code>的类里，state可能是指<code>AnimationState</code>，也可能是<code>GameState</code>，那么最好按照逻辑功能将使用的变量命名为对应的<code>animState</code>、<code>currentGameState</code>之类的，以此避免他人花费更多的时间去理解上下文。</li>
+</ul>
+</li>
+<li><p>避免无意义的语境</p>
+<ul>
+<li>避免在某些类前面加上应用名称的前缀，比如一个<code>加油站豪华版应用(Gas Station Deluxe)</code>中的每个类都加了<code>GSD</code>前缀，类似<code>GSDAccountAddress</code>这种，本来只是一个表示邮件地址的类，加了前缀后会让其他人误以为是用来什么特殊处理逻辑。</li>
+<li>这个问题个人也在实际开发过程中遇见过：在前东家游戏项目内阅读相关的C++源码时发现了很多带ES前缀的类（比如<code>ESArray</code>、<code>ESString</code>之类的），实际代码逻辑是一些针对项目本身需求优化过的STL容器，但一直很疑惑ES是啥特殊含义，还跑去问了上级老大，结果被告知ES是公司的英文简写。 这种容易造成误解的情况还是尽可能避免，实在需要的话，可以用命名空间包一层来处理。</li>
+</ul>
+</li>
+</ul>
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>整个第二章读下来，发现大部分坑已经在以前做项目的过程中趟过了，不过还是学到了新的东西，可见理论和实践还是应该相辅相成才能对个人给予最大的成长。</p>
 
       
     </div>
@@ -292,76 +864,6 @@
 <hr>
 <h3 id="Unity逻辑实现"><a href="#Unity逻辑实现" class="headerlink" title="Unity逻辑实现"></a>Unity逻辑实现</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"><span class="keyword">using</span> System.Collections;</span><br><span class="line"><span class="keyword">using</span> System.Collections.Generic;</span><br><span class="line"><span class="keyword">using</span> KeyBoard.Util;</span><br><span class="line"><span class="keyword">using</span> UnityEngine.Profiling;</span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">KeyBoard.Logic.Map</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title">IAstarNode</span>&lt;<span class="title">T</span>&gt; : <span class="title">IComparable</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">public</span> <span class="built_in">float</span> G_Value &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="built_in">float</span> H_Value &#123; <span class="keyword">get</span>; <span class="keyword">protected</span> <span class="keyword">set</span>; &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">abstract</span> <span class="built_in">bool</span> IsWalkable &#123;<span class="keyword">get</span>;&#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="built_in">float</span> F_Value =&gt; G_Value + H_Value;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> IAstarNode&lt;T&gt; Parent &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> T NodeData &#123; <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">IAstarNode</span>(<span class="params">T data</span>)</span></span><br><span class="line">        &#123;</span><br><span class="line">            NodeData = data;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="built_in">float</span> <span class="title">GetDistance</span>(<span class="params">IAstarNode&lt;T&gt; target</span>)</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="built_in">bool</span> <span class="title">TryFindPath</span>&lt;<span class="title">Node</span>&gt;(<span class="params">List&lt;Node&gt; nodes, Node start, Node end, <span class="built_in">int</span> Width, <span class="built_in">int</span> Length, <span class="keyword">out</span> List&lt;Node&gt; path</span>) <span class="keyword">where</span> Node:IAstarNode&lt;T&gt;</span></span><br><span class="line">        &#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> UNITY_EDITOR</span></span><br><span class="line">            Profiler.BeginSample(<span class="string">&quot;CustomAstar:&quot;</span> + <span class="keyword">typeof</span>(Node));</span><br><span class="line">            <span class="comment">// var watch = System.Diagnostics.Stopwatch.StartNew();</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">            path = <span class="literal">null</span>;</span><br><span class="line">            <span class="keyword">if</span>(!nodes.Contains(start) || !nodes.Contains(end))</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">            <span class="keyword">if</span>(Width &lt; <span class="number">0</span> || Length &lt; <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">            <span class="keyword">var</span> openNodes = <span class="keyword">new</span> SortedSet&lt;Node&gt;();</span><br><span class="line">            HashSet&lt;Node&gt; closeNodes = <span class="keyword">new</span> HashSet&lt;Node&gt;();</span><br><span class="line">            path = <span class="keyword">new</span> List&lt;Node&gt;();</span><br><span class="line">            openNodes.Add(start);</span><br><span class="line">            <span class="keyword">while</span>(openNodes.Count &gt; <span class="number">0</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">var</span> curNode = openNodes.Min;</span><br><span class="line">                openNodes.Remove(curNode);</span><br><span class="line">                closeNodes.Add(curNode);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span>(curNode == end) <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">var</span> idx = nodes.IndexOf(curNode);</span><br><span class="line">                <span class="keyword">var</span> neighbor = UIUtil.GetNeighbors(idx, (<span class="built_in">int</span>)Width, (<span class="built_in">int</span>)Length);</span><br><span class="line">                SearchNeighbor(curNode, nodes.SafeGet(neighbor.left), end, openNodes, closeNodes);</span><br><span class="line">                SearchNeighbor(curNode, nodes.SafeGet(neighbor.right), end, openNodes, closeNodes);</span><br><span class="line">                SearchNeighbor(curNode, nodes.SafeGet(neighbor.up), end, openNodes, closeNodes);</span><br><span class="line">                SearchNeighbor(curNode, nodes.SafeGet(neighbor.down), end, openNodes, closeNodes);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">while</span>(end != <span class="literal">null</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                path.Add(end);</span><br><span class="line">                end = end.Parent <span class="keyword">as</span> Node;</span><br><span class="line">            &#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> UNITY_EDITOR</span></span><br><span class="line">            <span class="comment">// watch.Stop();</span></span><br><span class="line">            <span class="comment">// UnityEngine.Debug.Log($&quot;自定义寻路用时&#123;watch.ElapsedMilliseconds&#125;ms&quot;);</span></span><br><span class="line">            Profiler.EndSample();</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">            <span class="keyword">return</span> path.Count &gt; <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">SearchNeighbor</span>&lt;<span class="title">Node</span>&gt;(<span class="params">Node curNode, Node neighborNode, Node end, ISet&lt;Node&gt; openNodes, ISet&lt;Node&gt; closeNodes</span>) <span class="keyword">where</span> Node:IAstarNode&lt;T&gt;</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span>(neighborNode == <span class="literal">null</span> || !neighborNode.IsWalkable || closeNodes.Contains(neighborNode))</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            <span class="built_in">float</span> newCost_G = curNode.G_Value + curNode.GetDistance(neighborNode);</span><br><span class="line">            <span class="keyword">if</span>(newCost_G &lt; neighborNode.G_Value || !openNodes.Contains(neighborNode))</span><br><span class="line">            &#123;</span><br><span class="line">                neighborNode.G_Value = newCost_G;</span><br><span class="line">                neighborNode.H_Value = neighborNode.GetDistance(end);</span><br><span class="line">                neighborNode.Parent = curNode;</span><br><span class="line">                <span class="keyword">if</span>(!openNodes.Contains(neighborNode))</span><br><span class="line">                &#123;</span><br><span class="line">                    openNodes.Add(neighborNode);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="built_in">int</span> <span class="title">Compare</span>(<span class="params">IAstarNode&lt;T&gt; x, IAstarNode&lt;T&gt; y</span>)</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span>(x.H_Value &lt; y.H_Value)</span><br><span class="line">                <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">            <span class="keyword">if</span>(x.H_Value &gt; y.H_Value)</span><br><span class="line">                <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="built_in">int</span> <span class="title">Compare</span>(<span class="params"><span class="built_in">object</span> x, <span class="built_in">object</span> y</span>)</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">var</span> a = x <span class="keyword">as</span> IAstarNode&lt;T&gt;;</span><br><span class="line">            <span class="keyword">var</span> b = y <span class="keyword">as</span> IAstarNode&lt;T&gt;;</span><br><span class="line">            <span class="keyword">if</span>(a != <span class="literal">null</span> &amp;&amp; b != <span class="literal">null</span>)</span><br><span class="line">                <span class="keyword">return</span> a.CompareTo(b);</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="built_in">int</span> <span class="title">CompareTo</span>(<span class="params"><span class="built_in">object</span> obj</span>)</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (obj == <span class="literal">null</span>) <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">var</span> other = obj <span class="keyword">as</span> IAstarNode&lt;T&gt;;</span><br><span class="line">            <span class="keyword">if</span> (other != <span class="literal">null</span>)</span><br><span class="line">                <span class="keyword">return</span> F_Value.CompareTo(other.F_Value);</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> ArgumentException(<span class="string">&quot;Object is not an IAstarNode&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <hr>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/01/30/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="0kk470">
-      <meta itemprop="description" content="咸鱼KK的随笔">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="saltyfishkk">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/01/30/hello-world/" class="post-title-link" itemprop="url">Hello World</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-01-30 11:09:31" itemprop="dateCreated datePublished" datetime="2022-01-30T11:09:31+08:00">2022-01-30</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
 
       
     </div>
@@ -600,24 +1102,32 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">8</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">4</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/0kk470" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;0kk470" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ookk47oo@gmail.com" title="E-Mail → mailto:ookk47oo@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
 
 
 
