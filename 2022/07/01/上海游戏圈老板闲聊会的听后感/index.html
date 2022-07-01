@@ -20,25 +20,20 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="前言去年搭的用于Svn、Jenkins以及个人博客用的服务器快到期了，本来之前用学生身份一百多元买的，一看续费要1000多就想着能不能找点便宜的方式。正好看到最近新购服务器的活动还在进行，新服务器3年只需要264￥，就想着能不能把旧服务器备份下然后把数据全部转到新服务器，变相地“便宜续一波”，最后操作下来是可行的，记录下。 步骤1.进入旧服务器操作面板，制作新的个人镜像。  2.买个新服务器，选择">
+  <meta name="description" content="前言前几天逛B站无意翻到的，正好闲着没事就听完了这两小时的谈话内容。 视频地址 感受如果站在行业外的人角度来看，还是能够了解到一些国内游戏业的不为人知的见闻，了解到几个公司老板尝试的一些战略方向。如果是业内人士，并且有通过业内关系、人脉什么的稍微了解过，那么感受就是听君一席话如听一席话，整个Room Meeting就如标题所说的那样，这类似一个你下班后找几个朋友聚餐闲聊吹牛的社交互动。 不过米哈游">
 <meta property="og:type" content="article">
-<meta property="og:title" content="腾讯云服务器的便宜续费方式">
-<meta property="og:url" content="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/index.html">
+<meta property="og:title" content="上海游戏圈老板闲聊会的听后感">
+<meta property="og:url" content="http://example.com/2022/07/01/%E4%B8%8A%E6%B5%B7%E6%B8%B8%E6%88%8F%E5%9C%88%E8%80%81%E6%9D%BF%E9%97%B2%E8%81%8A%E4%BC%9A%E7%9A%84%E5%90%AC%E5%90%8E%E6%84%9F/index.html">
 <meta property="og:site_name" content="saltyfishkk">
-<meta property="og:description" content="前言去年搭的用于Svn、Jenkins以及个人博客用的服务器快到期了，本来之前用学生身份一百多元买的，一看续费要1000多就想着能不能找点便宜的方式。正好看到最近新购服务器的活动还在进行，新服务器3年只需要264￥，就想着能不能把旧服务器备份下然后把数据全部转到新服务器，变相地“便宜续一波”，最后操作下来是可行的，记录下。 步骤1.进入旧服务器操作面板，制作新的个人镜像。  2.买个新服务器，选择">
+<meta property="og:description" content="前言前几天逛B站无意翻到的，正好闲着没事就听完了这两小时的谈话内容。 视频地址 感受如果站在行业外的人角度来看，还是能够了解到一些国内游戏业的不为人知的见闻，了解到几个公司老板尝试的一些战略方向。如果是业内人士，并且有通过业内关系、人脉什么的稍微了解过，那么感受就是听君一席话如听一席话，整个Room Meeting就如标题所说的那样，这类似一个你下班后找几个朋友聚餐闲聊吹牛的社交互动。 不过米哈游">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/1.png">
-<meta property="og:image" content="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/2.png">
-<meta property="og:image" content="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/3.png">
-<meta property="og:image" content="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/4.png">
-<meta property="og:image" content="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/5.png">
-<meta property="article:published_time" content="2022-03-21T12:13:19.000Z">
-<meta property="article:modified_time" content="2022-03-21T12:40:29.717Z">
+<meta property="article:published_time" content="2022-07-01T15:29:41.000Z">
+<meta property="article:modified_time" content="2022-07-01T16:20:46.623Z">
 <meta property="article:author" content="0kk470">
+<meta property="article:tag" content="随感">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/1.png">
 
-<link rel="canonical" href="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/">
+<link rel="canonical" href="http://example.com/2022/07/01/%E4%B8%8A%E6%B5%B7%E6%B8%B8%E6%88%8F%E5%9C%88%E8%80%81%E6%9D%BF%E9%97%B2%E8%81%8A%E4%BC%9A%E7%9A%84%E5%90%AC%E5%90%8E%E6%84%9F/">
 
 
 <script id="page-configurations">
@@ -51,7 +46,7 @@
   };
 </script>
 
-  <title>腾讯云服务器的便宜续费方式 | saltyfishkk</title>
+  <title>上海游戏圈老板闲聊会的听后感 | saltyfishkk</title>
   
 
 
@@ -171,7 +166,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/07/01/%E4%B8%8A%E6%B5%B7%E6%B8%B8%E6%88%8F%E5%9C%88%E8%80%81%E6%9D%BF%E9%97%B2%E8%81%8A%E4%BC%9A%E7%9A%84%E5%90%AC%E5%90%8E%E6%84%9F/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -184,7 +179,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          腾讯云服务器的便宜续费方式
+          上海游戏圈老板闲聊会的听后感
         </h1>
 
         <div class="post-meta">
@@ -193,9 +188,24 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-03-21 20:13:19 / 修改时间：20:40:29" itemprop="dateCreated datePublished" datetime="2022-03-21T20:13:19+08:00">2022-03-21</time>
+              <time title="创建时间：2022-07-01 23:29:41" itemprop="dateCreated datePublished" datetime="2022-07-01T23:29:41+08:00">2022-07-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-07-02 00:20:46" itemprop="dateModified" datetime="2022-07-02T00:20:46+08:00">2022-07-02</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%83%A1%E6%80%9D%E4%B9%B1%E6%83%B3/" itemprop="url" rel="index"><span itemprop="name">胡思乱想</span></a>
+                </span>
             </span>
 
           
@@ -209,13 +219,13 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>去年搭的用于Svn、Jenkins以及个人博客用的服务器快到期了，本来之前用学生身份一百多元买的，一看续费要1000多就想着能不能找点便宜的方式。<br>正好看到最近新购服务器的活动还在进行，新服务器3年只需要264￥，就想着能不能把旧服务器备份下然后把数据全部转到新服务器，变相地“便宜续一波”，最后操作下来是可行的，记录下。</p>
-<h3 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h3><p>1.进入旧服务器操作面板，制作新的个人镜像。</p>
-<p><img src="/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/1.png" alt="pic1"><br><img src="/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/2.png" alt="pic2"></p>
-<p>2.买个新服务器，选择的区域一定要是和旧服务器在同一地域（比如旧服务器是上海那么新服务器也选上海的），因为不同地域的镜像是无法跨域使用。<br><img src="/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/3.png" alt="pic3"></p>
-<p>3.在新服务器操作面板，使用之前创建的旧服务器镜像重装系统。<br><img src="/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/4.png" alt="pic4"></p>
-<p>4.关掉旧服务器，在域名解析界面把ip定向到新的服务器公网ip上，另外记得在新服务器的防火墙界面把相关的端口也开放下。<br><img src="/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/5.png" alt="pic5"></p>
-<p>5.登录新服务器测试了相关的功能，除了像jenkins、unity这种需要重新登下账号外，无其他问题。</p>
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>前几天逛B站无意翻到的，正好闲着没事就听完了这两小时的谈话内容。</p>
+<p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1sP4y1F7xa">视频地址</a></p>
+<h1 id="感受"><a href="#感受" class="headerlink" title="感受"></a>感受</h1><p>如果站在行业外的人角度来看，还是能够了解到一些国内游戏业的不为人知的见闻，了解到几个公司老板尝试的一些战略方向。<br>如果是业内人士，并且有通过业内关系、人脉什么的稍微了解过，那么感受就是听君一席话如听一席话，整个Room Meeting就如标题所说的那样，这类似一个你下班后找几个朋友聚餐闲聊吹牛的社交互动。</p>
+<p>不过米哈游和莉莉丝的CEO有些观念还是值得推崇的:以内容创作和玩法设计作为公司的主导方向。</p>
+<p>私以为任何技术，其研发的最终目的都是服务于内容的制作，技术的迭代与应用是为了解决实际的问题，而不是作为在其他人踌躇懵懂时向其炫耀的资本。</p>
+<p>个人觉得如果一个人在物质上并没有过分的追求，那么其实应该去尝试去追逐精神的诉求。换句话说，如果金钱物质上能够满足衣食住行的基本需求以及子孙后代的优良环境成长，那么剩下的一切我觉得都值得投入到满足自我精神需求（或者说追求理想）的社会活动当中。比如，我作为一个游戏开发者，我是以一个内容创作者或者生产者或者服务者的角色，来参与到社会生产活动当中，并通过生产的内容不断对整个社会产生积极效应（比如向玩家提供优质的消费内容，满足其丰富多彩的精神娱乐需求，或者尝试将游戏技术应用到其他行业，提升生产效率）。并在此过程中结识志同道合的人，满足他们的物质基本诉求（比如有房有车，没有基本生活压力），不停积累，带动更多的人投入到类似的事业当中，最终形成一个积极的行业循环。在国内这种环境下，这种想法也许是异想天开，但至少我个人还是会去尝试。</p>
+<p>希望未来我也能拥有自己的游戏公司，它也许无法产出享誉世界的3A巨作，无法孵化出颠覆业界的尖端技术，但至少它能够提供优质的内容让玩家感到快乐，能够让一部分内容创作者不再为基本生活而发愁。</p>
 
     </div>
 
@@ -224,6 +234,9 @@
     
 
       <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E9%9A%8F%E6%84%9F/" rel="tag"># 随感</a>
+          </div>
 
         
 
@@ -231,13 +244,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/" rel="prev" title="WindowsServer使用Jenkins自动部署github博客网站的坑">
-      <i class="fa fa-chevron-left"></i> WindowsServer使用Jenkins自动部署github博客网站的坑
+    <a href="/2022/06/30/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BDictionary/" rel="prev" title="C#容器源码之Dictionary">
+      <i class="fa fa-chevron-left"></i> C#容器源码之Dictionary
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2022/06/09/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BList/" rel="next" title="C#容器源码之List">
-      C#容器源码之List <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -296,7 +306,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4"><span class="nav-number">2.</span> <span class="nav-text">步骤</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%84%9F%E5%8F%97"><span class="nav-number">2.</span> <span class="nav-text">感受</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
