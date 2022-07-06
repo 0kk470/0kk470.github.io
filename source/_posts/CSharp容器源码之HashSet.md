@@ -159,7 +159,14 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
 2.以实现ICollection接口的集合来初始化。
 3.未实现ICollection接口，比如IEnumrable这种来初始化。
 
-### 集合的操作函数
+### 扩容机制
+***
+TODO
 
+### 集合的操作函数
+***
+TODO
 
 ### 总结
+***
+TODO
