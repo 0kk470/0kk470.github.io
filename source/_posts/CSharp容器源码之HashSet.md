@@ -225,8 +225,11 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
 
 ### 关键函数
 ***
-#### 常用操作函数
-```Add```, ```Remove```, ```TryGetValue```, ```Contains```等函数的逻辑与前一篇文章中分析的[Dictionary的增删查逻辑](https://saltyfishkk.games/2022/06/30/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BDictionary/)非常类似，这里简单说明下即可。
+
+主要分为容器常用函数与集合操作函数
+#### 容器常用函数
+
+在```HashSet```容器中, ```Add```, ```Remove```, ```TryGetValue```, ```Contains```等函数的逻辑与前一篇文章中分析的[Dictionary的增删查逻辑](https://saltyfishkk.games/2022/06/30/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BDictionary/)非常类似，这里简单说明下即可。
 概括下就是通过```bucket```位置找对应链表，通过比较链表元素中的```hashCode```的```Slot```(```Dictionary```里叫```Entry```)，添加的时候优先用缓存链表`freeList`的空```slot```，删除的时候将```slot```置回到```freeList```上。
 
 代码就不再赘述, 接下来重点看下```HashSet```独有的一些操作函数。
@@ -235,7 +238,7 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
 
 此类函数都是基于离散数学中集合的概念来编写的。
 
-### 并集
+##### 并集
 将当前HashSet与另一个集合取并集，会修改当前HashSet, 时间复杂度O(N)
 ```CSharp
         public void UnionWith(IEnumerable<T> other) {
@@ -250,7 +253,7 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
         }
 ```
 
-### 交集
+##### 交集
 将当前HashSet与另一个集合取交集，会修改当前HashSet, 时间复杂度O(N)
 ```CSharp
         public void IntersectWith(IEnumerable<T> other) {
