@@ -314,7 +314,7 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
             }
         }
 ```
-3. 如果目标集合仅仅是可迭代的，那么会先遍历目标集合，用一个```BitArray```来标记当前```HashSet```已包含的元素，然后再遍历当前```HashSet```移除掉所有标记的元素。
+3. 如果目标集合仅仅是可迭代的，那么会先遍历目标集合，用一个```BitArray```来标记当前```HashSet```已包含的元素，然后再遍历当前```HashSet```移除掉所有未标记的元素。
 ```CSharp
 
         /// <summary>
@@ -494,18 +494,49 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
  
  ![bitarray](bitarray.png)
 
- MarkBit就是将对应位置的int所对应的byte位置为1然后与原始值位或，IsMark就是将当前位置值取出来，进行位且运算判断目标byte位置是否为1。
+ ````MarkBit````就是先通过```bitPosition```整除```32```找到对应的```integer```， 然后将```bitPosition```模除```32```得到其在这个integer的相对二进制位置，然后将目标二进制值置为```1```,并与原始值进行位或运算进行值合并。
+ 
+ 而```IsMark```就是将目标位置的二进制值取出来，进行位且运算判断目标位置二进制值是否为```1```。
 
- 比如假设我们调用```MarkBit(137)```, 计算```137 / 32 = 4```，找到下标为```4```的位置的```int```数据， 然后计算 ```137 % 32 = 9```， 那么就将```1```左移到该int的第9位，然后位或运算将该```integer```的第9个二进制位置为1。
+ 比如假设我们调用```MarkBit(137)```, 计算```137 / 32 = 4```，找到下标为```4```的位置的```int```数据， 然后计算 ```137 % 32 = 9```， 那么就将```1```左移到该int的第9位，然后位或运算将该```integer```的第9个二进制位置为```1```。
 
  如下图所示
 
   ![markbit](markbit.png)
 
-同理 ```IsMark(137)```, 就是通过位且运算判断```index```为```4```位置的```integer```的```第9位二进制值```是否为```1```。
+同理 ```IsMark(137)```, 就是取到```index```为```4```位置的```integer```的```第9位二进制值```，将其与```1```进行位且运算判断该位置二进制是否为```1```，即是否被标记。
  
 
 ##### 差集
+
+移除当前```HashSet```与另一个集合重复的元素，会修改当前```HashSet```, 时间复杂度```O(N)```。
+
+  ![except](except.png)
+
+```CSharp
+        public void ExceptWith(IEnumerable<T> other) {
+            if (other == null) {
+                throw new ArgumentNullException("other");
+            }
+            Contract.EndContractBlock();
+ 
+            // this is already the enpty set; return
+            if (m_count == 0) {
+                return;
+            }
+ 
+            // special case if other is this; a set minus itself is the empty set
+            if (other == this) {
+                Clear();
+                return;
+            }
+ 
+            // remove every element in other from this
+            foreach (T element in other) {
+                Remove(element);
+            }
+        }
+```
 
 ##### 对称差集
 
