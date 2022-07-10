@@ -230,7 +230,7 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
 #### 容器常用函数
 
 在```HashSet```容器中, ```Add```, ```Remove```, ```TryGetValue```, ```Contains```等函数的逻辑与前一篇文章中分析的[Dictionary的增删查逻辑](https://saltyfishkk.games/2022/06/30/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BDictionary/)非常类似，这里简单说明下即可。
-概括下就是通过```bucket```位置找对应链表，通过比较链表元素中的```hashCode```的```Slot```(```Dictionary```里叫```Entry```)，添加的时候优先用缓存链表`freeList`的空```slot```，删除的时候将```slot```置回到```freeList```上。
+概括下就是通过```bucket```位置找对应链表，通过比较链表元素中的```hashCode```的```Slot```(```Dictionary```里叫```Entry```)，添加的时候优先用缓存链表```freeList```的空```slot```，删除的时候将```slot```置回到```freeList```上。
 
 代码就不再赘述, 接下来重点看下```HashSet```独有的一些操作函数。
 
@@ -239,7 +239,10 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
 此类函数都是基于离散数学中集合的概念来编写的。
 
 ##### 并集
-将当前HashSet与另一个集合取并集，会修改当前HashSet, 时间复杂度O(N)
+将当前```HashSet```与另一个集合取并集，会修改当前```HashSet```, 时间复杂度```O(N)```
+
+![union](union.png)
+
 ```CSharp
         public void UnionWith(IEnumerable<T> other) {
             if (other == null) {
@@ -254,7 +257,10 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
 ```
 
 ##### 交集
-将当前HashSet与另一个集合取交集，会修改当前HashSet, 时间复杂度O(N)
+将当前```HashSet```与另一个集合取交集，会修改当前HashSet, 时间复杂度```O(N)```。
+
+![intersect](intersect.png)
+
 ```CSharp
         public void IntersectWith(IEnumerable<T> other) {
             if (other == null) {
@@ -288,6 +294,216 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
             IntersectWithEnumerable(other);
         }
 ```
+这个函数有几个优化逻辑:
+1. 如果目标集合是空```ICollection```的话，那么直接清空这个```HashSet```(与空集的交集就是空集本身)。
+2. 如果目标集合是具有相同元素类型和比较器的```HashSet```，那么遍历移除掉目标集合已包含的元素，时间复杂度O(N)。
+```CSharp
+        /// <summary>
+        /// If other is a hashset that uses same equality comparer, intersect is much faster 
+        /// because we can use other's Contains
+        /// </summary>
+        /// <param name="other"></param>
+        private void IntersectWithHashSetWithSameEC(HashSet<T> other) {
+            for (int i = 0; i < m_lastIndex; i++) {
+                if (m_slots[i].hashCode >= 0) {
+                    T item = m_slots[i].value;
+                    if (!other.Contains(item)) {
+                        Remove(item);
+                    }
+                }
+            }
+        }
+```
+3. 如果目标集合仅仅是可迭代的，那么会先遍历目标集合，用一个```BitArray```来标记当前```HashSet```已包含的元素，然后再遍历当前```HashSet```移除掉所有标记的元素。
+```CSharp
+
+        /// <summary>
+        /// Iterate over other. If contained in this, mark an element in bit array corresponding to
+        /// its position in m_slots. If anything is unmarked (in bit array), remove it.
+        /// 
+        /// This attempts to allocate on the stack, if below StackAllocThreshold.
+        /// </summary>
+        /// <param name="other"></param>
+        [System.Security.SecuritySafeCritical]
+        private unsafe void IntersectWithEnumerable(IEnumerable<T> other) {
+            Debug.Assert(m_buckets != null, "m_buckets shouldn't be null; callers should check first");
+ 
+            // keep track of current last index; don't want to move past the end of our bit array
+            // (could happen if another thread is modifying the collection)
+            int originalLastIndex = m_lastIndex;
+            int intArrayLength = BitHelper.ToIntArrayLength(originalLastIndex);
+            BitHelper bitHelper;
+            if (intArrayLength <= StackAllocThreshold) {
+                int* bitArrayPtr = stackalloc int[intArrayLength];
+                bitHelper = new BitHelper(bitArrayPtr, intArrayLength);
+            }
+            else {
+                int[] bitArray = new int[intArrayLength];
+                bitHelper = new BitHelper(bitArray, intArrayLength);
+            }
+ 
+            // mark if contains: find index of in slots array and mark corresponding element in bit array
+            foreach (T item in other) {
+                int index = InternalIndexOf(item);
+                if (index >= 0) {
+                    bitHelper.MarkBit(index);
+                }
+            }
+ 
+            // if anything unmarked, remove it. Perf can be optimized here if BitHelper had a 
+            // FindFirstUnmarked method.
+            for (int i = 0; i < originalLastIndex; i++) {
+                if (m_slots[i].hashCode >= 0 && !bitHelper.IsMarked(i)) {
+                    Remove(m_slots[i].value);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Used internally by set operations which have to rely on bit array marking. This is like
+        /// Contains but returns index in slots array. 
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        private int InternalIndexOf(T item) {
+            Debug.Assert(m_buckets != null, "m_buckets was null; callers should check first");
+ 
+            int hashCode = InternalGetHashCode(item);
+            for (int i = m_buckets[hashCode % m_buckets.Length] - 1; i >= 0; i = m_slots[i].next) {
+                if ((m_slots[i].hashCode) == hashCode && m_comparer.Equals(m_slots[i].value, item)) {
+                    return i;
+                }
+            }
+            // wasn't found
+            return -1;
+        }
+```
+
+这个函数牺牲了部分空间(使用了```bitArray```来标记包含元素)来换取```O(N)```的时间复杂度，不然就得嵌套```for```循环以```O(N^2)```的时间复杂度来处理。
+另外这个函数在```HashSet```元素数量小于等于```3170(StackAllocThreshold为100)```时会直接在栈上分配内存，超过后才会在堆上分配内存，
+从而降低```GC```的开销。
+```CSharp
+            int intArrayLength = BitHelper.ToIntArrayLength(originalLastIndex);
+            BitHelper bitHelper;
+            if (intArrayLength <= StackAllocThreshold) {
+                int* bitArrayPtr = stackalloc int[intArrayLength];
+                bitHelper = new BitHelper(bitArrayPtr, intArrayLength);
+            }
+
+            internal static int ToIntArrayLength(int n) {
+                return n > 0 ? ((n - 1) / IntSize + 1) : 0;
+            }
+```
+该函数基于```BitArray位运算```来标记，一个```int```为```32位```，最多可以容纳```32```个byte标记, 实现如下:
+```CSharp
+    unsafe internal class BitHelper {   // should not be serialized
+ 
+        private const byte MarkedBitFlag = 1;
+        private const byte IntSize = 32;
+ 
+        // m_length of underlying int array (not logical bit array)
+        private int m_length;
+        
+        // ptr to stack alloc'd array of ints
+        [System.Security.SecurityCritical]
+        private int* m_arrayPtr;
+ 
+        // array of ints
+        private int[] m_array;
+ 
+        // whether to operate on stack alloc'd or heap alloc'd array 
+        private bool useStackAlloc;
+ 
+        /// <summary>
+        /// Instantiates a BitHelper with a heap alloc'd array of ints
+        /// </summary>
+        /// <param name="bitArray">int array to hold bits</param>
+        /// <param name="length">length of int array</param>
+        [System.Security.SecurityCritical]
+        internal BitHelper(int* bitArrayPtr, int length) {
+            this.m_arrayPtr = bitArrayPtr;
+            this.m_length = length;
+            useStackAlloc = true;
+        }
+ 
+        /// <summary>
+        /// Instantiates a BitHelper with a heap alloc'd array of ints
+        /// </summary>
+        /// <param name="bitArray">int array to hold bits</param>
+        /// <param name="length">length of int array</param>
+        internal BitHelper(int[] bitArray, int length) {
+            this.m_array = bitArray;
+            this.m_length = length;
+        }
+ 
+        /// <summary>
+        /// Mark bit at specified position
+        /// </summary>
+        /// <param name="bitPosition"></param>
+        [System.Security.SecuritySafeCritical]
+        internal unsafe void MarkBit(int bitPosition) {
+            if (useStackAlloc) {
+                int bitArrayIndex = bitPosition / IntSize;
+                if (bitArrayIndex < m_length && bitArrayIndex >= 0) {
+                    m_arrayPtr[bitArrayIndex] |= (MarkedBitFlag << (bitPosition % IntSize));
+                }
+            }
+            else {
+                int bitArrayIndex = bitPosition / IntSize;
+                if (bitArrayIndex < m_length && bitArrayIndex >= 0) {
+                    m_array[bitArrayIndex] |= (MarkedBitFlag << (bitPosition % IntSize));
+                }
+            }
+        }
+ 
+        /// <summary>
+        /// Is bit at specified position marked?
+        /// </summary>
+        /// <param name="bitPosition"></param>
+        /// <returns></returns>
+        [System.Security.SecuritySafeCritical]
+        internal unsafe bool IsMarked(int bitPosition) {
+            if (useStackAlloc) {
+                int bitArrayIndex = bitPosition / IntSize;
+                if (bitArrayIndex < m_length && bitArrayIndex >= 0) {
+                    return ((m_arrayPtr[bitArrayIndex] & (MarkedBitFlag << (bitPosition % IntSize))) != 0);
+                }
+                return false;
+            }
+            else {
+                int bitArrayIndex = bitPosition / IntSize;
+                if (bitArrayIndex < m_length && bitArrayIndex >= 0) {
+                    return ((m_array[bitArrayIndex] & (MarkedBitFlag << (bitPosition % IntSize))) != 0);
+                }
+                return false;
+            }
+        }
+ 
+        /// <summary>
+        /// How many ints must be allocated to represent n bits. Returns (n+31)/32, but 
+        /// avoids overflow
+        /// </summary>
+        /// <param name="n"></param>
+        /// <returns></returns>
+        internal static int ToIntArrayLength(int n) {
+            return n > 0 ? ((n - 1) / IntSize + 1) : 0;
+        }
+    }
+```
+ ```BitArray```的结构如下图所示
+ 
+ ![bitarray](bitarray.png)
+
+ MarkBit就是将对应位置的int所对应的byte位置为1然后与原始值位或，IsMark就是将当前位置值取出来，进行位且运算判断目标byte位置是否为1。
+
+ 比如假设我们调用```MarkBit(137)```, 计算```137 / 32 = 4```，找到下标为```4```的位置的```int```数据， 然后计算 ```137 % 32 = 9```， 那么就将```1```左移到该int的第9位，然后位或运算将该```integer```的第9个二进制位置为1。
+
+ 如下图所示
+
+  ![markbit](markbit.png)
+
+同理 ```IsMark(137)```, 就是通过位且运算判断```index```为```4```位置的```integer```的```第9位二进制值```是否为```1```。
+ 
 
 ##### 差集
 
