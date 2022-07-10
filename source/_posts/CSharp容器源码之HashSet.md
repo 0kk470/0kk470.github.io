@@ -490,11 +490,12 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
         }
     }
 ```
- ```BitArray```的结构如下图所示
+
+ 数据结构```BitArray```的结构如下图所示
  
  ![bitarray](bitarray.png)
 
- ````MarkBit````就是先通过```bitPosition```整除```32```找到对应的```integer```， 然后将```bitPosition```模除```32```得到其在这个integer的相对二进制位置，然后将目标二进制值置为```1```,并与原始值进行位或运算进行值合并。
+函数 ````MarkBit````就是先通过```bitPosition```整除```32```找到对应的```integer```， 然后将```bitPosition```模除```32```得到其在这个integer的相对二进制位置，然后将目标二进制值置为```1```,并与原始值进行位或运算进行值合并。
  
  而```IsMark```就是将目标位置的二进制值取出来，进行位且运算判断目标位置二进制值是否为```1```。
 
