@@ -109,7 +109,7 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
  
             int capacity = source.m_buckets.Length;
             int threshold = HashHelpers.ExpandPrime(count + 1);
-            // 将被拷贝的hashset元素数量大的最小素数容量与当前hashset容量比较
+            // 将[被拷贝的hashset元素数量]最优素数大小的容量与当前hashset容量比较
             if (threshold >= capacity) {
                 //当前容量更小就完全按照目标hashset大小容量拷贝
                 m_buckets = (int[])source.m_buckets.Clone();
@@ -119,7 +119,7 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
                 m_freeList = source.m_freeList;
             }
             else {
-                //当前容量更小就遍历目标hashset一个个添加
+                //当前容量更大就遍历被拷贝的hashset来一个个添加
                 int lastIndex = source.m_lastIndex;
                 Slot[] slots = source.m_slots;
                 Initialize(count);
@@ -600,24 +600,7 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
 
 4. 如果另一个集合仅仅是可迭代的集合，那么会调用```SymmetricExceptWithEnumerable```函数，代码逻辑如下。
 
-```
-        /// <summary>
-        /// Implementation notes:
-        /// 
-        /// Used for symmetric except when other isn't a HashSet. This is more tedious because 
-        /// other may contain duplicates. HashSet technique could fail in these situations:
-        /// 1. Other has a duplicate that's not in this: HashSet technique would add then 
-        /// remove it.
-        /// 2. Other has a duplicate that's in this: HashSet technique would remove then add it
-        /// back.
-        /// In general, its presence would be toggled each time it appears in other. 
-        /// 
-        /// This technique uses bit marking to indicate whether to add/remove the item. If already
-        /// present in collection, it will get marked for deletion. If added from other, it will
-        /// get marked as something not to remove.
-        ///
-        /// </summary>
-        /// <param name="other"></param>
+```CSharp
         [System.Security.SecuritySafeCritical]
         private unsafe void SymmetricExceptWithEnumerable(IEnumerable<T> other) {
             int originalLastIndex = m_lastIndex;
@@ -644,18 +627,9 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
                 int location = 0;
                 bool added = AddOrGetLocation(item, out location);
                 if (added) {
-                    // wasn't already present in collection; flag it as something not to remove
-                    // *NOTE* if location is out of range, we should ignore. BitHelper will
-                    // detect that it's out of bounds and not try to mark it. But it's 
-                    // expected that location could be out of bounds because adding the item
-                    // will increase m_lastIndex as soon as all the free spots are filled.
                     itemsAddedFromOther.MarkBit(location);
                 }
                 else {
-                    // already there...if not added from other, mark for remove. 
-                    // *NOTE* Even though BitHelper will check that location is in range, we want 
-                    // to check here. There's no point in checking items beyond originalLastIndex
-                    // because they could not have been in the original collection
                     if (location < originalLastIndex && !itemsAddedFromOther.IsMarked(location)) {
                         itemsToRemove.MarkBit(location);
                     }
@@ -714,7 +688,7 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
 
 ##### 子集
 
-判断当前HashSet是否为一个集合的子集
+判断当前HashSet是否为一个集合的子集。
 
 ```CSharp
         public bool IsSubsetOf(IEnumerable<T> other) {
@@ -747,15 +721,231 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
             }
         }
 ```
+子集判断主要分为以下几种情况
+1. 空集是任何集合的子集，所以```HashSet```元素数量为0直接返回true就行。
+2. 如果当前```HashSet```的元素数量超过了```other```的元素数量，那么肯定这个```HashSet```肯定就不是```other```的子集了。
+3. 如果当前```HashSet```和```other```的比较器是一致的，那么直接判断```other```是否包含```HashSet```的所有元素就行了。
+```CSharp
+        private bool IsSubsetOfHashSetWithSameEC(HashSet<T> other) {
+ 
+            foreach (T item in this) {
+                if (!other.Contains(item)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+```
+4.如果只能够迭代的话，那么会使用同之前求对称差集一样的思路，使用BitArray来标记计数已存在的元素
 
+```CSharp
+        [System.Security.SecuritySafeCritical]
+        private unsafe ElementCount CheckUniqueAndUnfoundElements(IEnumerable<T> other, bool returnIfUnfound) {
+            ElementCount result;
+ 
+            // need special case in case this has no elements. 
+            if (m_count == 0) {
+                int numElementsInOther = 0;
+                foreach (T item in other) {
+                    numElementsInOther++;
+                    // break right away, all we want to know is whether other has 0 or 1 elements
+                    break;
+                }
+                result.uniqueCount = 0;
+                result.unfoundCount = numElementsInOther;
+                return result;
+            }
+ 
+ 
+            Debug.Assert((m_buckets != null) && (m_count > 0), "m_buckets was null but count greater than 0");
+ 
+            int originalLastIndex = m_lastIndex;
+            int intArrayLength = BitHelper.ToIntArrayLength(originalLastIndex);
+ 
+            BitHelper bitHelper;
+            if (intArrayLength <= StackAllocThreshold) {
+                int* bitArrayPtr = stackalloc int[intArrayLength];
+                bitHelper = new BitHelper(bitArrayPtr, intArrayLength);
+            }
+            else {
+                int[] bitArray = new int[intArrayLength];
+                bitHelper = new BitHelper(bitArray, intArrayLength);
+            }
+ 
+            // count of items in other not found in this
+            int unfoundCount = 0;
+            // count of unique items in other found in this
+            int uniqueFoundCount = 0;
+ 
+            foreach (T item in other) {
+                int index = InternalIndexOf(item);
+                if (index >= 0) {
+                    if (!bitHelper.IsMarked(index)) {
+                        // item hasn't been seen yet
+                        bitHelper.MarkBit(index);
+                        uniqueFoundCount++;
+                    }
+                }
+                else {
+                    unfoundCount++;
+                    if (returnIfUnfound) {
+                        break;
+                    }
+                }
+            }
+ 
+            result.uniqueCount = uniqueFoundCount;
+            result.unfoundCount = unfoundCount;
+            return result;
+        }
+```
+
+最后判断```other```的元素不重复计数是否与当前```Hashset```元素数量相同即可，个人觉得后一步的```unfoundcount```判断其实可以忽略掉
+```CSharp
+   return (result.uniqueCount == m_count && result.unfoundCount >= 0);
+```
 ##### 真子集
+
+判断当前```HashSet```是否为另一个集合```other```的真子集。
+
+```CSharp
+        public bool IsProperSubsetOf(IEnumerable<T> other) {
+            if (other == null) {
+                throw new ArgumentNullException("other");
+            }
+            Contract.EndContractBlock();
+ 
+            ICollection<T> otherAsCollection = other as ICollection<T>;
+            if (otherAsCollection != null) {
+                // the empty set is a proper subset of anything but the empty set
+                if (m_count == 0) {
+                    return otherAsCollection.Count > 0;
+                }
+                HashSet<T> otherAsSet = other as HashSet<T>;
+                // faster if other is a hashset (and we're using same equality comparer)
+                if (otherAsSet != null && AreEqualityComparersEqual(this, otherAsSet)) {
+                    if (m_count >= otherAsSet.Count) {
+                        return false;
+                    }
+                    // this has strictly less than number of items in other, so the following
+                    // check suffices for proper subset.
+                    return IsSubsetOfHashSetWithSameEC(otherAsSet);
+                }
+            }
+ 
+            ElementCount result = CheckUniqueAndUnfoundElements(other, false);
+            return (result.uniqueCount == m_count && result.unfoundCount > 0);
+ 
+        }
+```
+逻辑基本与子集判断一致，排除掉```hashset```本身也是其子集的情况即可。
 
 ##### 超集
 
+判断当前```HashSet```是否为另一个集合```other```的超(父)集。
+
+```CSharp
+       public bool IsSupersetOf(IEnumerable<T> other) {
+            if (other == null) {
+                throw new ArgumentNullException("other");
+            }
+            Contract.EndContractBlock();
+ 
+            // try to fall out early based on counts
+            ICollection<T> otherAsCollection = other as ICollection<T>;
+            if (otherAsCollection != null) {
+                // if other is the empty set then this is a superset
+                if (otherAsCollection.Count == 0) {
+                    return true;
+                }
+                HashSet<T> otherAsSet = other as HashSet<T>;
+                // try to compare based on counts alone if other is a hashset with
+                // same equality comparer
+                if (otherAsSet != null && AreEqualityComparersEqual(this, otherAsSet)) {
+                    if (otherAsSet.Count > m_count) {
+                        return false;
+                    }
+                }
+            }
+ 
+            return ContainsAllElements(other);
+        }
+```
+排除掉两种特殊情况后，直接调用```ContainsAllElements```遍历```other```来判断所有元素是否在```HashSet```中。
+
 ##### 真超集
+
+判断当前```HashSet```是否为另一个集合```other```的真超(父)集。
+
+```CSharp
+        public bool IsProperSupersetOf(IEnumerable<T> other) {
+            if (other == null) {
+                throw new ArgumentNullException("other");
+            }
+            Contract.EndContractBlock();
+ 
+            // the empty set isn't a proper superset of any set.
+            if (m_count == 0) {
+                return false;
+            }
+ 
+            ICollection<T> otherAsCollection = other as ICollection<T>;
+            if (otherAsCollection != null) {
+                // if other is the empty set then this is a superset
+                if (otherAsCollection.Count == 0) {
+                    // note that this has at least one element, based on above check
+                    return true;
+                }
+                HashSet<T> otherAsSet = other as HashSet<T>;
+                // faster if other is a hashset with the same equality comparer
+                if (otherAsSet != null && AreEqualityComparersEqual(this, otherAsSet)) {
+                    if (otherAsSet.Count >= m_count) {
+                        return false;
+                    }
+                    // now perform element check
+                    return ContainsAllElements(otherAsSet);
+                }
+            }
+            // couldn't fall out in the above cases; do it the long way
+            ElementCount result = CheckUniqueAndUnfoundElements(other, true);
+            return (result.uniqueCount < m_count && result.unfoundCount == 0);
+ 
+        }
+```
 
 ##### 集合重叠
 
+判断两个集合是否重叠，与求交集逻辑类似，不同的是两个集合只要发现有一个共有的元素就可以结束遍历了。
+
+```CSharp
+        public bool Overlaps(IEnumerable<T> other) {
+            if (other == null) {
+                throw new ArgumentNullException("other");
+            }
+            Contract.EndContractBlock();
+ 
+            if (m_count == 0) {
+                return false;
+            }
+ 
+            foreach (T element in other) {
+                if (Contains(element)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+```
+
 ### 总结
 ***
-TODO
+
+1. 如果可以的话，在调用```HashSet```的部分操作函数时，尽量不用```IEnumrable<T>```作为参数。
+
+2. 使用```BitArray```标记遍历来处理逻辑，从而达到空间换时间的做法是一种很好的代码优化思路。
+
+3. 涉及到集合概念的应用场景可以多考虑使用```HashSet```代替```Dictionary```。
+
+4. 在可预估集合元素数量的情况下，尽可能使用预分配容量的构造函数。
+
+5. 在能确认代码运行安全的情况下，一些临时操作的小批量数据可以尝试直接在栈上分配内存(```stackalloc```)，来降低堆上分配内存后的```GC```开销。
