@@ -158,14 +158,16 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
 与```Dictionary```的构造函数逻辑类似， 关键函数还是分为以初始容量初始化和以另外的集合来初始化的逻辑。
 但是在以其他集合初始化新的```HashSet```时，会分为两种情况:
 1.以另一个具有相同元素类型和比较器的```HashSet```来初始化。这种情况下会直接调用```CopyFrom```从目标```HashSet```中拷贝所有元素。
+
+
+2.非```HashSet```的集合，如果实现```ICollection```接口，那么会先以```ICollection```的```Count```大小来初始化
 ```CSharp
         ICollection<T> coll = collection as ICollection<T>;
         int suggestedCapacity = coll == null ? 0 : coll.Count;
         Initialize(suggestedCapacity);
 ```
 
-2.非```HashSet```的集合，如果实现```ICollection```接口，那么会先以```ICollection```的```Count```大小来初始化。然后调用```UnionWith```并集操作，
-执行并集操作后如果HashSet已使用容量不到总容量的```1/3```(```ShrinkThreshold```常量为```3```)，则会调用裁剪函数优化```HashSet```底层存储数组的内存。
+然后调用```UnionWith```并集操作，执行并集操作后如果```HashSet```已使用容量不到总容量的```1/3```(```ShrinkThreshold```常量为```3```)，则会调用裁剪函数优化```HashSet```底层存储数组的内存。
 ```CSharp
         if (m_count > 0 && m_slots.Length / m_count > ShrinkThreshold) {
             TrimExcess();
@@ -229,8 +231,10 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
 主要分为容器常用函数与集合操作函数
 #### 容器常用函数
 
-在```HashSet```容器中, ```Add```, ```Remove```, ```TryGetValue```, ```Contains```等函数的逻辑与前一篇文章中分析的[Dictionary的增删查逻辑](https://saltyfishkk.games/2022/06/30/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BDictionary/)非常类似，这里简单说明下即可。
-概括下就是通过```bucket```位置找对应链表，通过比较链表元素中的```hashCode```的```Slot```(```Dictionary```里叫```Entry```)，添加的时候优先用缓存链表```freeList```的空```slot```，删除的时候将```slot```置回到```freeList```上。
+在```HashSet```容器中, ```Add```, ```Remove```, ```TryGetValue```, ```Contains```等函数的逻辑与前一篇文章中分析的[Dictionary的增删查逻辑](https://saltyfishkk.games/2022/06/30/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BDictionary/)是相似的。
+概括下就是查找的时候通过```bucket```位置找对应链表，通过比较链表元素中的```hashCode```找到```Slot```(```Dictionary```里叫```Entry```)
+
+添加的时候优先用缓存链表```freeList```的空```slot```，删除的时候将```slot```置回到```freeList```上。
 
 代码就不再赘述, 接下来重点看下```HashSet```独有的一些操作函数。
 
@@ -257,7 +261,7 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
 ```
 
 ##### 交集
-将当前```HashSet```与另一个集合取交集，会修改当前HashSet, 时间复杂度```O(N)```。
+将当前```HashSet```与另一个集合取交集，会修改当前```HashSet```, 时间复杂度```O(N)```。
 
 ![intersect](intersect.png)
 
@@ -296,7 +300,7 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
 ```
 这个函数有几个优化逻辑:
 1. 如果目标集合是空```ICollection```的话，那么直接清空这个```HashSet```(与空集的交集就是空集本身)。
-2. 如果目标集合是具有相同元素类型和比较器的```HashSet```，那么遍历移除掉目标集合已包含的元素，时间复杂度O(N)。
+2. 如果目标集合是具有相同元素类型和比较器的```HashSet```，那么遍历移除掉目标集合已包含的元素，时间复杂度```O(N)```。
 ```CSharp
         /// <summary>
         /// If other is a hashset that uses same equality comparer, intersect is much faster 
