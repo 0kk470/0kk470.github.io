@@ -541,7 +541,212 @@ private|IEqualityComparer<T>| m_comparer| 用于查找时比较元素
 
 ##### 对称差集
 
+集合A与集合B的对称差集定义为集合A与集合B中所有不属于A∩B的元素的集合。通俗来说就是A、B集合都有的元素都排除掉，不共有的元素就合并成一个集合。
+
+
+![symmetric](symmetric.png)
+
+该操作会修改当前```HashSet```, 代码如下
+```CSharp
+        public void SymmetricExceptWith(IEnumerable<T> other) {
+            if (other == null) {
+                throw new ArgumentNullException("other");
+            }
+            Contract.EndContractBlock();
+ 
+            // if set is empty, then symmetric difference is other
+            if (m_count == 0) {
+                UnionWith(other);
+                return;
+            }
+ 
+            // special case this; the symmetric difference of a set with itself is the empty set
+            if (other == this) {
+                Clear();
+                return;
+            }
+ 
+            HashSet<T> otherAsSet = other as HashSet<T>;
+            // If other is a HashSet, it has unique elements according to its equality comparer,
+            // but if they're using different equality comparers, then assumption of uniqueness
+            // will fail. So first check if other is a hashset using the same equality comparer;
+            // symmetric except is a lot faster and avoids bit array allocations if we can assume
+            // uniqueness
+            if (otherAsSet != null && AreEqualityComparersEqual(this, otherAsSet)) {
+                SymmetricExceptWithUniqueHashSet(otherAsSet);
+            }
+            else {
+                SymmetricExceptWithEnumerable(other);
+            }
+        }
+```
+该函数主要分为以下四种情况:
+
+1. 其中如果当前```HashSet```为空，那么对称差集就是另一个集合，这时候直接取并集合并即可
+
+2. 如果另一个集合就是当前```HashSet```本身，那么对称差集为空集合，直接清空```HashSet```
+
+3. 如果另一个集合也是```HashSet```并且两个```HashSet```有相同的比较器，那么直接遍历操作,共有的元素移除掉，不共有的元素则合并，时间复杂度```O(N)```。
+
+```CSharp
+        private void SymmetricExceptWithUniqueHashSet(HashSet<T> other) {
+            foreach (T item in other) {
+                if (!Remove(item)) {
+                    AddIfNotPresent(item);
+                }
+            }
+        }
+```
+
+4. 如果另一个集合仅仅是可迭代的集合，那么会调用```SymmetricExceptWithEnumerable```函数，代码逻辑如下。
+
+```
+        /// <summary>
+        /// Implementation notes:
+        /// 
+        /// Used for symmetric except when other isn't a HashSet. This is more tedious because 
+        /// other may contain duplicates. HashSet technique could fail in these situations:
+        /// 1. Other has a duplicate that's not in this: HashSet technique would add then 
+        /// remove it.
+        /// 2. Other has a duplicate that's in this: HashSet technique would remove then add it
+        /// back.
+        /// In general, its presence would be toggled each time it appears in other. 
+        /// 
+        /// This technique uses bit marking to indicate whether to add/remove the item. If already
+        /// present in collection, it will get marked for deletion. If added from other, it will
+        /// get marked as something not to remove.
+        ///
+        /// </summary>
+        /// <param name="other"></param>
+        [System.Security.SecuritySafeCritical]
+        private unsafe void SymmetricExceptWithEnumerable(IEnumerable<T> other) {
+            int originalLastIndex = m_lastIndex;
+            int intArrayLength = BitHelper.ToIntArrayLength(originalLastIndex);
+ 
+            BitHelper itemsToRemove;
+            BitHelper itemsAddedFromOther;
+            if (intArrayLength <= StackAllocThreshold / 2) {
+                int* itemsToRemovePtr = stackalloc int[intArrayLength];
+                itemsToRemove = new BitHelper(itemsToRemovePtr, intArrayLength);
+ 
+                int* itemsAddedFromOtherPtr = stackalloc int[intArrayLength];
+                itemsAddedFromOther = new BitHelper(itemsAddedFromOtherPtr, intArrayLength);
+            }
+            else {
+                int[] itemsToRemoveArray = new int[intArrayLength];
+                itemsToRemove = new BitHelper(itemsToRemoveArray, intArrayLength);
+ 
+                int[] itemsAddedFromOtherArray = new int[intArrayLength];
+                itemsAddedFromOther = new BitHelper(itemsAddedFromOtherArray, intArrayLength);
+            }
+ 
+            foreach (T item in other) {
+                int location = 0;
+                bool added = AddOrGetLocation(item, out location);
+                if (added) {
+                    // wasn't already present in collection; flag it as something not to remove
+                    // *NOTE* if location is out of range, we should ignore. BitHelper will
+                    // detect that it's out of bounds and not try to mark it. But it's 
+                    // expected that location could be out of bounds because adding the item
+                    // will increase m_lastIndex as soon as all the free spots are filled.
+                    itemsAddedFromOther.MarkBit(location);
+                }
+                else {
+                    // already there...if not added from other, mark for remove. 
+                    // *NOTE* Even though BitHelper will check that location is in range, we want 
+                    // to check here. There's no point in checking items beyond originalLastIndex
+                    // because they could not have been in the original collection
+                    if (location < originalLastIndex && !itemsAddedFromOther.IsMarked(location)) {
+                        itemsToRemove.MarkBit(location);
+                    }
+                }
+            }
+ 
+            // if anything marked, remove it
+            for (int i = 0; i < originalLastIndex; i++) {
+                if (itemsToRemove.IsMarked(i)) {
+                    Remove(m_slots[i].value);
+                }
+            }
+        }
+```
+
+可以看到用了两个```BitArray```来分别标记需要移除的元素下标和需要添加的元素下标。函数逻辑第一次先遍历```other```集合，调用```AddOrGetLocation```函数来与当前```HashSet```的元素进行比较。```AddOrGetLocation```代码如下。
+
+```CSharp
+        private bool AddOrGetLocation(T value, out int location) {
+            Debug.Assert(m_buckets != null, "m_buckets is null, callers should have checked");
+ 
+            int hashCode = InternalGetHashCode(value);
+            int bucket = hashCode % m_buckets.Length;
+            for (int i = m_buckets[hashCode % m_buckets.Length] - 1; i >= 0; i = m_slots[i].next) {
+                if (m_slots[i].hashCode == hashCode && m_comparer.Equals(m_slots[i].value, value)) {
+                    location = i;
+                    return false; //already present
+                }
+            }
+            int index;
+            if (m_freeList >= 0) {
+                index = m_freeList;
+                m_freeList = m_slots[index].next;
+            }
+            else {
+                if (m_lastIndex == m_slots.Length) {
+                    IncreaseCapacity();
+                    // this will change during resize
+                    bucket = hashCode % m_buckets.Length;
+                }
+                index = m_lastIndex;
+                m_lastIndex++;
+            }
+            m_slots[index].hashCode = hashCode;
+            m_slots[index].value = value;
+            m_slots[index].next = m_buckets[bucket] - 1;
+            m_buckets[bucket] = index + 1;
+            m_count++;
+            m_version++;
+            location = index;
+            return true;
+        }
+```
+
+如果比较后发现HashSet没有包含当前迭代的元素，就直接添加该元素到```HashSet```中，并将其标记为需要添加，否则的话要判断是不是之前循环时已经从```other```集合添加过来的，如果不是的话就说明这是```HashSet```和```other```集合共有的元素，需要标记其为将要删除的元素。之后就是遍历```HashSet```的所有元素，将标记为需要删除的元素```Remove```掉。
+
 ##### 子集
+
+判断当前HashSet是否为一个集合的子集
+
+```CSharp
+        public bool IsSubsetOf(IEnumerable<T> other) {
+            if (other == null) {
+                throw new ArgumentNullException("other");
+            }
+            Contract.EndContractBlock();
+ 
+            // The empty set is a subset of any set
+            if (m_count == 0) {
+                return true;
+            }
+ 
+            HashSet<T> otherAsSet = other as HashSet<T>;
+            // faster if other has unique elements according to this equality comparer; so check 
+            // that other is a hashset using the same equality comparer.
+            if (otherAsSet != null && AreEqualityComparersEqual(this, otherAsSet)) {
+                // if this has more elements then it can't be a subset
+                if (m_count > otherAsSet.Count) {
+                    return false;
+                }
+ 
+                // already checked that we're using same equality comparer. simply check that 
+                // each element in this is contained in other.
+                return IsSubsetOfHashSetWithSameEC(otherAsSet);
+            }
+            else {
+                ElementCount result = CheckUniqueAndUnfoundElements(other, false);
+                return (result.uniqueCount == m_count && result.unfoundCount >= 0);
+            }
+        }
+```
 
 ##### 真子集
 

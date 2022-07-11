@@ -364,7 +364,7 @@ dict.Add("D", 4)
 
 ```GetOrDefault```、```Contains```、```TryGetValue```等函数内部都会用到```FindEntry```来查找对应元素。代码如下:
 
-```Csharp
+```CSharp
 private int FindEntry(TKey key) {
             if( key == null) {
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key);
