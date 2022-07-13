@@ -77,14 +77,14 @@ private static|泛型数组| _emptyArray|  默认构造函数初始化后指向�
 
 ### 扩容机制
 
-```Push```添加新元素前进行判断，容量满了会以当前大小的```2倍```来扩容
+在```Push```添加新元素前进行判断，容量满了会以当前大小的```2倍```来扩容。
 
 ```CSharp
-            if (_size == _array.Length) {
-                T[] newArray = new T[(_array.Length == 0) ? _defaultCapacity : 2*_array.Length];
-                Array.Copy(_array, 0, newArray, 0, _size);
-                _array = newArray;
-            }
+        if (_size == _array.Length) {
+            T[] newArray = new T[(_array.Length == 0) ? _defaultCapacity : 2*_array.Length];
+            Array.Copy(_array, 0, newArray, 0, _size);
+            _array = newArray;
+        }
 ```
 
 为什么几乎所有的容器扩容的容量是上一次的```2倍```? 可以参考[知乎的讨论](https://www.zhihu.com/question/36538542)，以及```C++ vector```设计者[Andrew Koenig的解释](https://www.drdobbs.com/c-made-easier-how-vectors-grow/184401375)。
