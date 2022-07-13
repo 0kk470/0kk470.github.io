@@ -87,6 +87,17 @@ private static|泛型数组| _emptyArray|  默认构造函数初始化后指向�
             }
 ```
 
+为什么几乎所有的容器扩容的容量是上一次的```2倍```? 可以参考[知乎的讨论](https://www.zhihu.com/question/36538542)，以及```C++ vector```设计者[Andrew Koenig的解释](https://www.drdobbs.com/c-made-easier-how-vectors-grow/184401375)。
+
+概括来说，对于n个元素的插入操作，```2```倍扩容拷贝元素的次数```(n/2 + n/4 + n / 8 + .... + n / (2^K) ≈ n```, 即```O(N)```的时间复杂度, 如下图所示
+![capacity](capacity.png)。
+
+部分第三方实现会使用```1.5```倍作为扩容因子，这是为了```N```次扩容后，能够有机会复用之前的内存，对缓存更友好，不过在时间性能上会不如```2倍扩容```。而以```2倍```扩容，第N次需要的内存空间一定比前面```N - 1```次的扩容总量还要大，因此一定无法复用之前的内存空间。
+两种因子的扩容比较参见下图。
+![reuse](reuse.png)
+
+
+
 ### 操作函数
 
 #### Push
@@ -107,17 +118,83 @@ private static|泛型数组| _emptyArray|  默认构造函数初始化后指向�
 
 #### Pop
 
+弹出栈顶元素
+```CSharp
+        public T Pop() {
+            if (_size == 0)
+                ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_EmptyStack);
+            _version++;
+            T item = _array[--_size];
+            _array[_size] = default(T);     // Free memory quicker.
+            return item;
+        }
+```
+
 #### Peek
+
+获取栈顶元素
+
+```CSharp
+        public T Peek() {
+            if (_size==0)
+                ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_EmptyStack);
+            return _array[_size-1];
+        }
+```
 
 #### Contains
 
+遍历栈检查是否包含指定元素，注意如果T是值类型的话，那么每次遍历会有装箱的开销，这种情况下应谨慎使用此函数。
+
+```CSharp
+        public bool Contains(T item) {
+            int count = _size;
+ 
+            EqualityComparer<T> c = EqualityComparer<T>.Default;
+            while (count-- > 0) {
+                if (((Object) item) == null) {
+                    if (((Object) _array[count]) == null)
+                        return true;
+                }
+                else if (_array[count] != null && c.Equals(_array[count], item) ) {
+                    return true;
+                }
+            }
+            return false;
+        }
+```
+
 #### Clear
+
+清空栈内所有元素
+
+```CSharp
+        public void Clear() {
+            Array.Clear(_array, 0, _size);
+            _size = 0;
+            _version++;
+        }
+```
 
 #### TrimExcess
 
+将容量裁剪到当前元素数量大小，只会在元素数量超过容量```90%```的情况下调用才会生效。
+
+```CSharp
+        public void TrimExcess() {
+            int threshold = (int)(((double)_array.Length) * 0.9);        
+            if( _size < threshold ) {
+                T[] newarray = new T[_size];
+                Array.Copy(_array, 0, newarray, 0, _size);    
+                _array = newarray;
+                _version++;
+            }
+        }   
+```
+
 # 总结
 
-1. 确定使用大小的情况下，使用预分配大小的构造函数，降低后续```Push```多次扩容的开销。
+1. 确定使用大小的情况下，尽可能地使用预分配大小的构造函数，以降低后续```Push```多次扩容的开销。
 
 2. 尽量不用```IEnumrable<T>```来初始化```Stack```。
 
