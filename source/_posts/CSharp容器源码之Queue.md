@@ -107,7 +107,7 @@ private static|泛型数组| _emptyArray|  默认构造函数初始化后指向�
 
 ### 关键函数
 
-1. 入队
+#### Enqueue
 将一个元素添加到队列尾部, 因为是环形结构，```_tail```的索引需要模除一下获得实际的下标位置。
 ```CSharp
         public void Enqueue(T item) {
@@ -125,8 +125,8 @@ private static|泛型数组| _emptyArray|  默认构造函数初始化后指向�
             _version++;
         }
 ```
-2. 出队
 
+#### Dequeue
 移除并返回队首元素
 ```CSharp
         public T Dequeue() {
@@ -141,7 +141,8 @@ private static|泛型数组| _emptyArray|  默认构造函数初始化后指向�
             return removed;
         }
 ```
-3. 获取队首元素
+#### Peek
+获取队首元素
 ```CSharp
         public T Peek() {
             if (_size == 0)
@@ -150,7 +151,7 @@ private static|泛型数组| _emptyArray|  默认构造函数初始化后指向�
             return _array[_head];
         }
 ```
-4. Contains
+#### Contains
 从头到尾遍历判断元素是否在队列内
 ```CSharp
        public bool Contains(T item) {
@@ -206,10 +207,16 @@ private static|泛型数组| _emptyArray|  默认构造函数初始化后指向�
 这样就可以循环复用空间知道队列变满为止(```_size == length```)。
 
 
-为什么要使用环形结构?
+#### 为什么要使用环形结构?
 除了可以复用空间外，还可以反过来思考下，如果逻辑上不使用环形结构会怎么样?
 那么```_head```和```_tail```会持续递增下去，当达到数组末尾后，如果有新的元素添加到末尾，那么就不得不把当前所有的元素都往前挪，然后更新```_head```和```_tail```为新的下标。
 
 即在不使用环形结构的情况下，入队操作可能会导致```O(N)```时间复杂度的操作，而使用索引来```mod```数组长度的操作来模拟环形队列，就可以保证在不扩容的情况下每次入队操作都是```O(1)```。
 
 # 总结
+
+1. 调用```Peek```和```Dequeue```注意队列是否为空，否则会抛异常。
+
+2. 预估好容量，降低多次扩容带来的开销。
+
+3. 该队列不是双端队列```Deque```，只能操作队首元素，需要操作队末元素的话，考虑换用```List```或者自己实现。
