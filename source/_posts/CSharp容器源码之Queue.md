@@ -204,7 +204,7 @@ private static|泛型数组| _emptyArray|  默认构造函数初始化后指向�
 ![queue4](queue4.png)
 
 
-这样就可以循环复用空间知道队列变满为止(```_size == length```)。
+这样就可以循环复用空间直到队列变满为止(```_size == length```)。
 
 
 ### 为什么要使用环形结构?
