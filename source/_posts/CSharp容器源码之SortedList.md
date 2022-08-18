@@ -58,6 +58,7 @@ private static| TValue[]|_emptyValues| 默认构造函数内values初始化指�
 ```
 
 3. 自定义比较器的构造，会先调用默认构造函数。
+
 ```CSharp
         public SortedList(IComparer<TKey> comparer) 
             : this() {
@@ -77,6 +78,7 @@ private static| TValue[]|_emptyValues| 默认构造函数内values初始化指�
 ```
 
 5. 用另一个字典以及自定义比较器来初始化的构造函数, 调用了第4种构造函数，然后将数据拷贝过去， 并进行一次排序。
+
 ```CSharp
         public SortedList(IDictionary<TKey, TValue> dictionary, IComparer<TKey> comparer) 
             : this((dictionary != null ? dictionary.Count : 0), comparer) {
@@ -90,7 +92,7 @@ private static| TValue[]|_emptyValues| 默认构造函数内values初始化指�
         }
 ```
 
-6. 仅使用另一个字典初始化，调用的第5个构造函数
+6. 仅使用另一个字典初始化，调用的第5个构造函数。
 
 ```CSharp
         public SortedList(IDictionary<TKey, TValue> dictionary) 
@@ -100,7 +102,8 @@ private static| TValue[]|_emptyValues| 默认构造函数内values初始化指�
 
 ## 扩容机制
 
-空数组情况下第一次扩容为4，其余情况为2倍扩容
+空数组情况下第一次扩容为```4```，其余情况为```2```倍扩容
+
 ```CSharp
         private void EnsureCapacity(int min) {
             int newCapacity = keys.Length == 0? _defaultCapacity: keys.Length * 2;
@@ -115,6 +118,8 @@ private static| TValue[]|_emptyValues| 默认构造函数内values初始化指�
 ## 关键函数
 
 ### 查找
+
+一般是根据```key```来找值，当然也支持通过数组下标来找值，使用```ValueList[idx]```访问即可。
 
 ```CSharp
         public int IndexOf(TKey key) {
@@ -135,10 +140,12 @@ private static| TValue[]|_emptyValues| 默认构造函数内values初始化指�
             return IndexOfValue(value) >= 0;
         }
 ```
-因为是列表本身是有序的，所以key用二分查找会更快，时间复杂度O(logN)。
-但是value的查找就还是用数组遍历来处理，时间复杂度O(N)。
+因为是列表本身是有序的，所以```key```用二分查找会更快，时间复杂度```O(logN)```。
 
-也可以根据下标来找key。
+但是```value```的查找还是得用数组遍历来处理，时间复杂度```O(N)```。
+
+另外也可以根据下标来找```key```。
+
 ```CSharp
         private TKey GetKey(int index) {
             if (index < 0 || index >= _size) 
@@ -148,6 +155,8 @@ private static| TValue[]|_emptyValues| 默认构造函数内values初始化指�
 ```
 
 ### 插入
+
+可以像```Dictionary```那样来赋值来插入数据。
 
 ```CSharp
         public TValue this[TKey key] {
@@ -184,13 +193,19 @@ private static| TValue[]|_emptyValues| 默认构造函数内values初始化指�
         }        
 ```
 
-如果二分查找找不到```key```，则会返回合适位置下标的取反，这时候返回的必是负数，代表列表中不存在这个```key```。
-对应位置的选取参见官方文档说明
+如果二分查找找不到```key```，则会返回合适得插入位置下标的取反，取反返回的必是负数（代表列表中不存在这个```key```）。
+
+插入位置的选取参见官方文档说明
 ![1](1.png)
+
+大意就是如果存在比要插入的```key```更大的```key_larger```，则返回第一个```key_larger```的下标取反值。如果没有更大的键，则返回列表最后一个元素下标的取反值。
+
+之后就是将目标位置之后的元素后挪```1```位，腾个地给新来的```key```和```value```。
 
 ### 删除
 
 既可以根据下标删除，也可以根据```key```来删除。
+
 ```CSharp
         public void RemoveAt(int index) {
             if (index < 0 || index >= _size) ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.index, ExceptionResource.ArgumentOutOfRange_Index);
@@ -204,10 +219,7 @@ private static| TValue[]|_emptyValues| 默认构造函数内values初始化指�
             version++;
         }
     
-        // Removes an entry from this sorted list. If an entry with the specified
-        // key exists in the sorted list, it is removed. An ArgumentException is
-        // thrown if the key is null.
-        // 
+
         public bool Remove(TKey key) {
             int i = IndexOfKey(key);
             if (i >= 0) 
@@ -215,11 +227,7 @@ private static| TValue[]|_emptyValues| 默认构造函数内values初始化指�
             return i >= 0;
         }
 ```
-
-
-大意就是如果存在比要插入的```key```更大的```key_larger```，则返回第一个```key_larger```的下标取反值。如果没有更大的键，则返回列表最后一个元素下标的取反值。
-
-之后就是将目标位置之后的元素后挪```1```位，腾个地给新来的```key```和```value```。
+注意```key```不能为空。
 
 ### 裁剪容量
 
