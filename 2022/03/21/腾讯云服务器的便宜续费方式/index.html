@@ -17,28 +17,28 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"saltyfishkk.games","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="前言去年搭的用于Svn、Jenkins以及个人博客用的服务器快到期了，本来之前用学生身份一百多元买的，一看续费要1000多就想着能不能找点便宜的方式。正好看到最近新购服务器的活动还在进行，新服务器3年只需要264￥，就想着能不能把旧服务器备份下然后把数据全部转到新服务器，变相地“便宜续一波”，最后操作下来是可行的，记录下。 步骤1.进入旧服务器操作面板，制作新的个人镜像。  2.买个新服务器，选择">
 <meta property="og:type" content="article">
 <meta property="og:title" content="腾讯云服务器的便宜续费方式">
-<meta property="og:url" content="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/index.html">
+<meta property="og:url" content="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/index.html">
 <meta property="og:site_name" content="saltyfishkk">
 <meta property="og:description" content="前言去年搭的用于Svn、Jenkins以及个人博客用的服务器快到期了，本来之前用学生身份一百多元买的，一看续费要1000多就想着能不能找点便宜的方式。正好看到最近新购服务器的活动还在进行，新服务器3年只需要264￥，就想着能不能把旧服务器备份下然后把数据全部转到新服务器，变相地“便宜续一波”，最后操作下来是可行的，记录下。 步骤1.进入旧服务器操作面板，制作新的个人镜像。  2.买个新服务器，选择">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/1.png">
-<meta property="og:image" content="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/2.png">
-<meta property="og:image" content="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/3.png">
-<meta property="og:image" content="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/4.png">
-<meta property="og:image" content="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/5.png">
+<meta property="og:image" content="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/1.png">
+<meta property="og:image" content="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/2.png">
+<meta property="og:image" content="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/3.png">
+<meta property="og:image" content="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/4.png">
+<meta property="og:image" content="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/5.png">
 <meta property="article:published_time" content="2022-03-21T12:13:19.000Z">
 <meta property="article:modified_time" content="2022-06-09T15:11:18.813Z">
 <meta property="article:author" content="0kk470">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/1.png">
+<meta name="twitter:image" content="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/1.png">
 
-<link rel="canonical" href="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/">
+<link rel="canonical" href="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/">
 
 
 <script id="page-configurations">
@@ -171,7 +171,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/">
+    <link itemprop="mainEntityOfPage" href="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -241,7 +241,7 @@
       <i class="fa fa-chevron-left"></i> WindowsServer使用Jenkins自动部署github博客网站的坑
     </a></div>
       <div class="post-nav-item">
-    <a href="/2022/06/09/C#%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BList/" rel="next" title="C#容器源码之List">
+    <a href="/2022/06/09/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BList/" rel="next" title="C#容器源码之List">
       C#容器源码之List <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
@@ -316,20 +316,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-count">13</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-count">4</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

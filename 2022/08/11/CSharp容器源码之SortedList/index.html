@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"saltyfishkk.games","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="前言复习下SortedList的一些知识点。 源码地址。 正文定义    按照键来排序的键&#x2F;值对列表，可以通过键和索引来访问数据。连续性存储结构，底层为两个数组，可动态扩容。 成员变量    修饰符 类型 变量名 作用简述    private TKey[] keys 键数据数组   private TValue[] values 值数据数组   private int _size 列表元素数量">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CSharp容器源码之SortedList">
+<meta property="og:url" content="https://saltyfishkk.games/2022/08/11/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BSortedList/index.html">
+<meta property="og:site_name" content="saltyfishkk">
+<meta property="og:description" content="前言复习下SortedList的一些知识点。 源码地址。 正文定义    按照键来排序的键&#x2F;值对列表，可以通过键和索引来访问数据。连续性存储结构，底层为两个数组，可动态扩容。 成员变量    修饰符 类型 变量名 作用简述    private TKey[] keys 键数据数组   private TValue[] values 值数据数组   private int _size 列表元素数量">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://saltyfishkk.games/2022/08/11/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BSortedList/1.png">
+<meta property="article:published_time" content="2022-08-11T11:39:49.000Z">
+<meta property="article:modified_time" content="2022-08-18T13:23:28.083Z">
+<meta property="article:author" content="0kk470">
+<meta property="article:tag" content="C#">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://saltyfishkk.games/2022/08/11/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BSortedList/1.png">
+
+<link rel="canonical" href="https://saltyfishkk.games/2022/08/11/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BSortedList/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>CSharp容器源码之SortedList | saltyfishkk</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">saltyfishkk</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://saltyfishkk.games/2022/08/11/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BSortedList/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0kk470">
+      <meta itemprop="description" content="咸鱼KK的随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="saltyfishkk">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          CSharp容器源码之SortedList
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-08-11 19:39:49" itemprop="dateCreated datePublished" datetime="2022-08-11T19:39:49+08:00">2022-08-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-08-18 21:23:28" itemprop="dateModified" datetime="2022-08-18T21:23:28+08:00">2022-08-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/" itemprop="url" rel="index"><span itemprop="name">源码剖析</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>复习下<code>SortedList</code>的一些知识点。</p>
+<p><a target="_blank" rel="noopener" href="https://referencesource.microsoft.com/#System/compmod/system/collections/generic/sortedlist.cs">源码地址</a>。</p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><hr>
+<p>   按照键来排序的键/值对列表，可以通过键和索引来访问数据。连续性存储结构，底层为两个数组，可动态扩容。</p>
+<h2 id="成员变量"><a href="#成员变量" class="headerlink" title="成员变量"></a>成员变量</h2><hr>
+<table>
+<thead>
+<tr>
+<th>修饰符</th>
+<th align="center">类型</th>
+<th align="right">变量名</th>
+<th align="right">作用简述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>private</td>
+<td align="center">TKey[]</td>
+<td align="right">keys</td>
+<td align="right">键数据数组</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">TValue[]</td>
+<td align="right">values</td>
+<td align="right">值数据数组</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right">_size</td>
+<td align="right">列表元素数量</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right">_version</td>
+<td align="right">数据版本，用于校验对数组的操作是否合法</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">IComparer<TKey></td>
+<td align="right">comparer</td>
+<td align="right">排序用的比较函数</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">KeyList</td>
+<td align="right">keyList</td>
+<td align="right">键列表，任何对该列表的操作也会影响到SortedList本身</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">ValueList</td>
+<td align="right">valueList</td>
+<td align="right">值列表，任何对该列表的操作也会影响到SortedList本身</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">Object</td>
+<td align="right"><em>syncRoot</em></td>
+<td align="right">多线程下使用的同步对象，不过现在基本废弃了。</td>
+</tr>
+<tr>
+<td>private static</td>
+<td align="center">TKey[]</td>
+<td align="right">_emptyKeys</td>
+<td align="right">默认构造函数内keys初始化指向的只读数组</td>
+</tr>
+<tr>
+<td>private static</td>
+<td align="center">TValue[]</td>
+<td align="right">_emptyValues</td>
+<td align="right">默认构造函数内values初始化指向的只读数组</td>
+</tr>
+</tbody></table>
+<h2 id="构造函数"><a href="#构造函数" class="headerlink" title="构造函数"></a>构造函数</h2><ol>
+<li>默认构造函数。和其他容器的默认构造函数大同小异，初始数据数组默认指向空的只读数组，下次插入必定触发扩容。</li>
+</ol>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">SortedList</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">    keys = emptyKeys;</span><br><span class="line">    values = emptyValues;</span><br><span class="line">    _size = <span class="number">0</span>;</span><br><span class="line">    comparer = Comparer&lt;TKey&gt;.Default; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li> 预分配容量的构造函数。</li>
+</ol>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">SortedList</span>(<span class="params"><span class="built_in">int</span> capacity</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (capacity &lt; <span class="number">0</span>)</span><br><span class="line">        ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.capacity, ExceptionResource.ArgumentOutOfRange_NeedNonNegNumRequired);</span><br><span class="line">    keys = <span class="keyword">new</span> TKey[capacity];</span><br><span class="line">    values = <span class="keyword">new</span> TValue[capacity];</span><br><span class="line">    comparer = Comparer&lt;TKey&gt;.Default;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li><p>自定义比较器的构造，会先调用默认构造函数。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">SortedList</span>(<span class="params">IComparer&lt;TKey&gt; comparer</span>) </span></span><br><span class="line"><span class="function">    : <span class="title">this</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (comparer != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">this</span>.comparer = comparer;</span><br><span class="line">    &#125;                </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>自定义比较器以及分配容量的构造函数，会触发一次扩容。</p>
+</li>
+</ol>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">SortedList</span>(<span class="params"><span class="built_in">int</span> capacity, IComparer&lt;TKey&gt; comparer</span>) </span></span><br><span class="line"><span class="function">    : <span class="title">this</span>(<span class="params">comparer</span>)</span> &#123;</span><br><span class="line">    Capacity = capacity;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li><p>用另一个字典以及自定义比较器来初始化的构造函数, 调用了第4种构造函数，然后将数据拷贝过去， 并进行一次排序。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">SortedList</span>(<span class="params">IDictionary&lt;TKey, TValue&gt; dictionary, IComparer&lt;TKey&gt; comparer</span>) </span></span><br><span class="line"><span class="function">    : <span class="title">this</span>(<span class="params">(dictionary != <span class="literal">null</span> ? dictionary.Count : <span class="number">0</span></span>), comparer)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (dictionary==<span class="literal">null</span>)</span><br><span class="line">        ThrowHelper.ThrowArgumentNullException(ExceptionArgument.dictionary);</span><br><span class="line"> </span><br><span class="line">    dictionary.Keys.CopyTo(keys, <span class="number">0</span>);</span><br><span class="line">    dictionary.Values.CopyTo(values, <span class="number">0</span>);</span><br><span class="line">    Array.Sort&lt;TKey, TValue&gt;(keys, values, comparer);</span><br><span class="line">    _size = dictionary.Count;            </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>仅使用另一个字典初始化，调用的第5个构造函数</p>
+</li>
+</ol>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">SortedList</span>(<span class="params">IDictionary&lt;TKey, TValue&gt; dictionary</span>) </span></span><br><span class="line"><span class="function">    : <span class="title">this</span>(<span class="params">dictionary, <span class="literal">null</span></span>)</span> &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="扩容机制"><a href="#扩容机制" class="headerlink" title="扩容机制"></a>扩容机制</h2><p>空数组情况下第一次扩容为4，其余情况为2倍扩容</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">EnsureCapacity</span>(<span class="params"><span class="built_in">int</span> min</span>)</span> &#123;</span><br><span class="line">    <span class="built_in">int</span> newCapacity = keys.Length == <span class="number">0</span>? _defaultCapacity: keys.Length * <span class="number">2</span>;</span><br><span class="line">    <span class="comment">// Allow the list to grow to maximum possible capacity (~2G elements) before encountering overflow.</span></span><br><span class="line">    <span class="comment">// Note that this check works even when _items.Length overflowed thanks to the (uint) cast</span></span><br><span class="line">    <span class="keyword">if</span> ((<span class="built_in">uint</span>)newCapacity &gt; MaxArrayLength) newCapacity = MaxArrayLength;</span><br><span class="line">    <span class="keyword">if</span> (newCapacity &lt; min) newCapacity = min;</span><br><span class="line">    Capacity = newCapacity;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="关键函数"><a href="#关键函数" class="headerlink" title="关键函数"></a>关键函数</h2><h3 id="查找"><a href="#查找" class="headerlink" title="查找"></a>查找</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">int</span> <span class="title">IndexOf</span>(<span class="params">TKey key</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (((Object) key) == <span class="literal">null</span>)</span><br><span class="line">        ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key);</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">int</span> i = Array.BinarySearch&lt;TKey&gt;(_dict.keys, <span class="number">0</span>,</span><br><span class="line">                              _dict.Count, key, _dict.comparer);</span><br><span class="line">    <span class="keyword">if</span> (i &gt;= <span class="number">0</span>) <span class="keyword">return</span> i;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">bool</span> <span class="title">ContainsKey</span>(<span class="params">TKey key</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> IndexOfKey(key) &gt;= <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line">    </span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">bool</span> <span class="title">ContainsValue</span>(<span class="params">TValue <span class="keyword">value</span></span>)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> IndexOfValue(<span class="keyword">value</span>) &gt;= <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为是列表本身是有序的，所以key用二分查找会更快，时间复杂度O(logN)。<br>但是value的查找就还是用数组遍历来处理，时间复杂度O(N)。</p>
+<p>也可以根据下标来找key。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> TKey <span class="title">GetKey</span>(<span class="params"><span class="built_in">int</span> index</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (index &lt; <span class="number">0</span> || index &gt;= _size) </span><br><span class="line">       ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.index, ExceptionResource.ArgumentOutOfRange_Index);</span><br><span class="line">    <span class="keyword">return</span> keys[index];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="插入"><a href="#插入" class="headerlink" title="插入"></a>插入</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> TValue <span class="keyword">this</span>[TKey key] &#123;</span><br><span class="line">    <span class="keyword">get</span> &#123;</span><br><span class="line">        <span class="built_in">int</span> i = IndexOfKey(key);</span><br><span class="line">        <span class="keyword">if</span> (i &gt;= <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> values[i];</span><br><span class="line"> </span><br><span class="line">        ThrowHelper.ThrowKeyNotFoundException();</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">default</span>(TValue);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">set</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (((Object) key) == <span class="literal">null</span>) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key);</span><br><span class="line">        <span class="built_in">int</span> i = Array.BinarySearch&lt;TKey&gt;(keys, <span class="number">0</span>, _size, key, comparer);</span><br><span class="line">        <span class="keyword">if</span> (i &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">            values[i] = <span class="keyword">value</span>;</span><br><span class="line">            version++;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        Insert(~i, key, <span class="keyword">value</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">Insert</span>(<span class="params"><span class="built_in">int</span> index, TKey key, TValue <span class="keyword">value</span></span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (_size == keys.Length) EnsureCapacity(_size + <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">if</span> (index &lt; _size) &#123;</span><br><span class="line">        Array.Copy(keys, index, keys, index + <span class="number">1</span>, _size - index);</span><br><span class="line">        Array.Copy(values, index, values, index + <span class="number">1</span>, _size - index);</span><br><span class="line">    &#125;</span><br><span class="line">    keys[index] = key;</span><br><span class="line">    values[index] = <span class="keyword">value</span>;</span><br><span class="line">    _size++;</span><br><span class="line">    version++;</span><br><span class="line">&#125;        </span><br></pre></td></tr></table></figure>
+
+<p>如果二分查找找不到<code>key</code>，则会返回合适位置下标的取反，这时候返回的必是负数，代表列表中不存在这个<code>key</code>。<br>对应位置的选取参见官方文档说明<br><img src="/2022/08/11/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BSortedList/1.png" alt="1"></p>
+<h3 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h3><p>既可以根据下标删除，也可以根据<code>key</code>来删除。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">RemoveAt</span>(<span class="params"><span class="built_in">int</span> index</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (index &lt; <span class="number">0</span> || index &gt;= _size) ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.index, ExceptionResource.ArgumentOutOfRange_Index);</span><br><span class="line">    _size--;</span><br><span class="line">    <span class="keyword">if</span> (index &lt; _size) &#123;</span><br><span class="line">        Array.Copy(keys, index + <span class="number">1</span>, keys, index, _size - index);</span><br><span class="line">        Array.Copy(values, index + <span class="number">1</span>, values, index, _size - index);</span><br><span class="line">    &#125;</span><br><span class="line">    keys[_size] = <span class="literal">default</span>(TKey);</span><br><span class="line">    values[_size] = <span class="literal">default</span>(TValue);</span><br><span class="line">    version++;</span><br><span class="line">&#125;</span><br><span class="line">    </span><br><span class="line"><span class="comment">// Removes an entry from this sorted list. If an entry with the specified</span></span><br><span class="line"><span class="comment">// key exists in the sorted list, it is removed. An ArgumentException is</span></span><br><span class="line"><span class="comment">// thrown if the key is null.</span></span><br><span class="line"><span class="comment">// </span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">bool</span> <span class="title">Remove</span>(<span class="params">TKey key</span>)</span> &#123;</span><br><span class="line">    <span class="built_in">int</span> i = IndexOfKey(key);</span><br><span class="line">    <span class="keyword">if</span> (i &gt;= <span class="number">0</span>) </span><br><span class="line">        RemoveAt(i);</span><br><span class="line">    <span class="keyword">return</span> i &gt;= <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>大意就是如果存在比要插入的<code>key</code>更大的<code>key_larger</code>，则返回第一个<code>key_larger</code>的下标取反值。如果没有更大的键，则返回列表最后一个元素下标的取反值。</p>
+<p>之后就是将目标位置之后的元素后挪<code>1</code>位，腾个地给新来的<code>key</code>和<code>value</code>。</p>
+<h3 id="裁剪容量"><a href="#裁剪容量" class="headerlink" title="裁剪容量"></a>裁剪容量</h3><p>与<code>List</code>一致，容量使用未达到<code>90%</code>就可以裁剪。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">TrimExcess</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">    <span class="built_in">int</span> threshold = (<span class="built_in">int</span>)(((<span class="built_in">double</span>)keys.Length) * <span class="number">0.9</span>);             </span><br><span class="line">    <span class="keyword">if</span>( _size &lt; threshold ) &#123;</span><br><span class="line">        Capacity = _size;                </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
+<li><p>如果要使用数组下标访问数据可以通过<code>ValueList</code>和<code>KeyList</code>两个索引器来访问，但需要注意的是这两个接口虽然是继承自<code>IList&lt;T&gt;</code>，但只能读数据，任何写操作(<code>Remove,Insert,Clear,Add</code>)都不被允许。</p>
+</li>
+<li><p>与其他容器一样，能预估容量提前分配就使用预分配构造函数。</p>
+</li>
+<li><p>在少量键值对数据需要保持有序的情况下使用该容器。</p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C#</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/07/23/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BQueue/" rel="prev" title="C#容器源码之Queue">
+      <i class="fa fa-chevron-left"></i> C#容器源码之Queue
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%AD%A3%E6%96%87"><span class="nav-number">2.</span> <span class="nav-text">正文</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">2.1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%90%E5%91%98%E5%8F%98%E9%87%8F"><span class="nav-number">2.2.</span> <span class="nav-text">成员变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0"><span class="nav-number">2.3.</span> <span class="nav-text">构造函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%A9%E5%AE%B9%E6%9C%BA%E5%88%B6"><span class="nav-number">2.4.</span> <span class="nav-text">扩容机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E5%87%BD%E6%95%B0"><span class="nav-number">2.5.</span> <span class="nav-text">关键函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E6%89%BE"><span class="nav-number">2.5.1.</span> <span class="nav-text">查找</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%92%E5%85%A5"><span class="nav-number">2.5.2.</span> <span class="nav-text">插入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A0%E9%99%A4"><span class="nav-number">2.5.3.</span> <span class="nav-text">删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A3%81%E5%89%AA%E5%AE%B9%E9%87%8F"><span class="nav-number">2.5.4.</span> <span class="nav-text">裁剪容量</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">2.6.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">0kk470</p>
+  <div class="site-description" itemprop="description">咸鱼KK的随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/0kk470" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;0kk470" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ookk47oo@gmail.com" title="E-Mail → mailto:ookk47oo@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">蜀ICP备2021017502号 </a>
+      <img src="/images/beian.png" style="display: inline-block;">
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">0kk470</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

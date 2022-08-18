@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"saltyfishkk.games","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="前言复习下Queue的一些知识点。 源码地址。 正文定义    队列, 先进先出(FIFO)的顺序容器,  底层为数组。 成员变量    修饰符 类型 变量名 作用简述    private 泛型数组 _array 队列数组数据   private int _head 队首下标位置   private int _tail 队尾下标位置   private int _size 队列元素数量   pr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C#容器源码之Queue">
+<meta property="og:url" content="https://saltyfishkk.games/2022/07/23/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BQueue/index.html">
+<meta property="og:site_name" content="saltyfishkk">
+<meta property="og:description" content="前言复习下Queue的一些知识点。 源码地址。 正文定义    队列, 先进先出(FIFO)的顺序容器,  底层为数组。 成员变量    修饰符 类型 变量名 作用简述    private 泛型数组 _array 队列数组数据   private int _head 队首下标位置   private int _tail 队尾下标位置   private int _size 队列元素数量   pr">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://saltyfishkk.games/2022/07/23/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BQueue/queue1.png">
+<meta property="og:image" content="https://saltyfishkk.games/2022/07/23/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BQueue/queue2.png">
+<meta property="og:image" content="https://saltyfishkk.games/2022/07/23/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BQueue/queue3.png">
+<meta property="og:image" content="https://saltyfishkk.games/2022/07/23/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BQueue/queue4.png">
+<meta property="article:published_time" content="2022-07-23T07:09:17.000Z">
+<meta property="article:modified_time" content="2022-08-11T11:38:51.341Z">
+<meta property="article:author" content="0kk470">
+<meta property="article:tag" content="C#">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://saltyfishkk.games/2022/07/23/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BQueue/queue1.png">
+
+<link rel="canonical" href="https://saltyfishkk.games/2022/07/23/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BQueue/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>C#容器源码之Queue | saltyfishkk</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">saltyfishkk</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://saltyfishkk.games/2022/07/23/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BQueue/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0kk470">
+      <meta itemprop="description" content="咸鱼KK的随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="saltyfishkk">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          C#容器源码之Queue
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-07-23 15:09:17" itemprop="dateCreated datePublished" datetime="2022-07-23T15:09:17+08:00">2022-07-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-08-11 19:38:51" itemprop="dateModified" datetime="2022-08-11T19:38:51+08:00">2022-08-11</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/" itemprop="url" rel="index"><span itemprop="name">源码剖析</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>复习下<code>Queue</code>的一些知识点。</p>
+<p><a target="_blank" rel="noopener" href="https://referencesource.microsoft.com/#System/compmod/system/collections/generic/queue.cs">源码地址</a>。</p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><hr>
+<p>   队列, 先进先出(FIFO)的顺序容器,  底层为数组。</p>
+<h2 id="成员变量"><a href="#成员变量" class="headerlink" title="成员变量"></a>成员变量</h2><hr>
+<table>
+<thead>
+<tr>
+<th>修饰符</th>
+<th align="center">类型</th>
+<th align="right">变量名</th>
+<th align="right">作用简述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>private</td>
+<td align="center">泛型数组</td>
+<td align="right">_array</td>
+<td align="right">队列数组数据</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right">_head</td>
+<td align="right">队首下标位置</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right">_tail</td>
+<td align="right">队尾下标位置</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right">_size</td>
+<td align="right">队列元素数量</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">int</td>
+<td align="right">_version</td>
+<td align="right">迭代时用于数据版本校验</td>
+</tr>
+<tr>
+<td>private</td>
+<td align="center">Object</td>
+<td align="right">_syncRoot</td>
+<td align="right">多线程下的同步对象，已弃用，多线程建议使用ConcurrentQueue<T></td>
+</tr>
+<tr>
+<td>private static</td>
+<td align="center">泛型数组</td>
+<td align="right">_emptyArray</td>
+<td align="right">默认构造函数初始化后指向的空数组</td>
+</tr>
+</tbody></table>
+<h2 id="构造函数"><a href="#构造函数" class="headerlink" title="构造函数"></a>构造函数</h2><p>三种构造函数:</p>
+<ol>
+<li>默认构造函数，初始化数组数据为只读的空数组，下一次<code>Enqueue</code>就会触发扩容<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Queue</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">    _array = _emptyArray;            </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>预分配大小的构造函数</li>
+</ol>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Queue</span>(<span class="params"><span class="built_in">int</span> capacity</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (capacity &lt; <span class="number">0</span>)</span><br><span class="line">        ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.capacity, ExceptionResource.ArgumentOutOfRange_NeedNonNegNumRequired);</span><br><span class="line">    </span><br><span class="line">    _array = <span class="keyword">new</span> T[capacity];</span><br><span class="line">    _head = <span class="number">0</span>;</span><br><span class="line">    _tail = <span class="number">0</span>;</span><br><span class="line">    _size = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>用其他容器初始化的构造函数，可能会触发多次扩容</li>
+</ol>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Queue</span>(<span class="params">IEnumerable&lt;T&gt; collection</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (collection == <span class="literal">null</span>)</span><br><span class="line">        ThrowHelper.ThrowArgumentNullException(ExceptionArgument.collection);</span><br><span class="line"> </span><br><span class="line">    _array = <span class="keyword">new</span> T[_DefaultCapacity];</span><br><span class="line">    _size = <span class="number">0</span>;</span><br><span class="line">    _version = <span class="number">0</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">using</span>(IEnumerator&lt;T&gt; en = collection.GetEnumerator()) &#123;</span><br><span class="line">        <span class="keyword">while</span>(en.MoveNext()) &#123;</span><br><span class="line">            Enqueue(en.Current);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;            </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="扩容机制"><a href="#扩容机制" class="headerlink" title="扩容机制"></a>扩容机制</h2><p>以当前队列元素数量<code>2</code>倍的容量来扩容，如果容器初始容量小于<code>4</code>， 那么会再额外分配<code>最小容量为4</code>的空间， 代码如下</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (_size == _array.Length) &#123;</span><br><span class="line">    <span class="built_in">int</span> newcapacity = (<span class="built_in">int</span>)((<span class="built_in">long</span>)_array.Length * (<span class="built_in">long</span>)_GrowFactor / <span class="number">100</span>);</span><br><span class="line">    <span class="keyword">if</span> (newcapacity &lt; _array.Length + _MinimumGrow) &#123;</span><br><span class="line">        newcapacity = _array.Length + _MinimumGrow;</span><br><span class="line">    &#125;</span><br><span class="line">    SetCapacity(newcapacity);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>重新分配数组内存，然后将旧数据拷贝过去</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">SetCapacity</span>(<span class="params"><span class="built_in">int</span> capacity</span>)</span> &#123;</span><br><span class="line">    T[] newarray = <span class="keyword">new</span> T[capacity];</span><br><span class="line">    <span class="keyword">if</span> (_size &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (_head &lt; _tail) &#123;</span><br><span class="line">            Array.Copy(_array, _head, newarray, <span class="number">0</span>, _size);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            Array.Copy(_array, _head, newarray, <span class="number">0</span>, _array.Length - _head);</span><br><span class="line">            Array.Copy(_array, <span class="number">0</span>, newarray, _array.Length - _head, _tail);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    _array = newarray;</span><br><span class="line">    _head = <span class="number">0</span>;</span><br><span class="line">    _tail = (_size == capacity) ? <span class="number">0</span> : _size;</span><br><span class="line">    _version++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意这里存在队首索引在队尾索引之后的情况<code>(_head &gt;= _tail)</code>，这是因为队列的逻辑结构是一个环形结构，后文会详细说明。</p>
+<h2 id="关键函数"><a href="#关键函数" class="headerlink" title="关键函数"></a>关键函数</h2><h3 id="Enqueue"><a href="#Enqueue" class="headerlink" title="Enqueue"></a>Enqueue</h3><p>将一个元素添加到队列尾部, 因为是环形结构，<code>_tail</code>的索引需要模除一下获得实际的下标位置。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Enqueue</span>(<span class="params">T item</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (_size == _array.Length) &#123;</span><br><span class="line">        <span class="built_in">int</span> newcapacity = (<span class="built_in">int</span>)((<span class="built_in">long</span>)_array.Length * (<span class="built_in">long</span>)_GrowFactor / <span class="number">100</span>);</span><br><span class="line">        <span class="keyword">if</span> (newcapacity &lt; _array.Length + _MinimumGrow) &#123;</span><br><span class="line">            newcapacity = _array.Length + _MinimumGrow;</span><br><span class="line">        &#125;</span><br><span class="line">        SetCapacity(newcapacity);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    _array[_tail] = item;</span><br><span class="line">    _tail = (_tail + <span class="number">1</span>) % _array.Length;</span><br><span class="line">    _size++;</span><br><span class="line">    _version++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Dequeue"><a href="#Dequeue" class="headerlink" title="Dequeue"></a>Dequeue</h3><p>移除并返回队首元素</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> T <span class="title">Dequeue</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (_size == <span class="number">0</span>)</span><br><span class="line">        ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_EmptyQueue);</span><br><span class="line">    </span><br><span class="line">    T removed = _array[_head];</span><br><span class="line">    _array[_head] = <span class="literal">default</span>(T);</span><br><span class="line">    _head = (_head + <span class="number">1</span>) % _array.Length;</span><br><span class="line">    _size--;</span><br><span class="line">    _version++;</span><br><span class="line">    <span class="keyword">return</span> removed;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Peek"><a href="#Peek" class="headerlink" title="Peek"></a>Peek</h3><p>获取队首元素</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> T <span class="title">Peek</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (_size == <span class="number">0</span>)</span><br><span class="line">        ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_EmptyQueue);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> _array[_head];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Contains"><a href="#Contains" class="headerlink" title="Contains"></a>Contains</h3><p>从头到尾遍历判断元素是否在队列内</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">bool</span> <span class="title">Contains</span>(<span class="params">T item</span>)</span> &#123;</span><br><span class="line">     <span class="built_in">int</span> index = _head;</span><br><span class="line">     <span class="built_in">int</span> count = _size;</span><br><span class="line"> </span><br><span class="line">     EqualityComparer&lt;T&gt; c = EqualityComparer&lt;T&gt;.Default;</span><br><span class="line">     <span class="keyword">while</span> (count-- &gt; <span class="number">0</span>) &#123;</span><br><span class="line">         <span class="keyword">if</span> (((Object) item) == <span class="literal">null</span>) &#123;</span><br><span class="line">             <span class="keyword">if</span> (((Object) _array[index]) == <span class="literal">null</span>)</span><br><span class="line">                 <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">         &#125; </span><br><span class="line">         <span class="keyword">else</span> <span class="keyword">if</span> (_array[index] != <span class="literal">null</span> &amp;&amp; c.Equals(_array[index], item)) &#123;</span><br><span class="line">             <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">         &#125;</span><br><span class="line">         index = (index + <span class="number">1</span>) % _array.Length;</span><br><span class="line">     &#125;</span><br><span class="line">    </span><br><span class="line">     <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"> &#125;  </span><br></pre></td></tr></table></figure>
+
+<h2 id="环形结构说明"><a href="#环形结构说明" class="headerlink" title="环形结构说明"></a>环形结构说明</h2><p>这里举例说明下，假设我们有个队列长度为<code>6</code>的<code>Queue&lt;int&gt;</code>，然后把队列用数字 <code>1~6</code> 塞满。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Queue&lt;<span class="built_in">int</span>&gt; q = <span class="keyword">new</span> Queue&lt;<span class="built_in">int</span>&gt;(<span class="keyword">new</span>[] &#123; <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span> &#125;);</span><br></pre></td></tr></table></figure>
+<p>这时候队列结构如下图。</p>
+<p><img src="/2022/07/23/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BQueue/queue1.png" alt="queue1"></p>
+<p>接下来我们调用一次出列</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">q.Dequeue();</span><br></pre></td></tr></table></figure>
+<p>变化后的结构如下图</p>
+<p><img src="/2022/07/23/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BQueue/queue2.png" alt="queue2"></p>
+<p>接着调用一次入列将<code>数字7</code>添加到队尾</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">q.Enqueue(<span class="number">7</span>);</span><br></pre></td></tr></table></figure>
+<p>结构如下图</p>
+<p><img src="/2022/07/23/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BQueue/queue3.png" alt="queue3"></p>
+<p>可以看到当<code>_tail</code>递增到数组末尾时(<code>_tail == 6</code>), 发现<code>_head</code>之前还有剩余空间，那么正好可以复用之前的空间,于是 <code>_tail % 6(数组长度) = 0</code>，正好是数组出队后预留的空位置，那么<code>_tail</code>就直接占用该位置即可。从逻辑结构上来说就好像数组的首尾拼在一起形成了一个顺时针的环状结构。</p>
+<p><img src="/2022/07/23/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BQueue/queue4.png" alt="queue4"></p>
+<p>这样就可以循环复用空间直到队列变满为止(<code>_size == length</code>)。</p>
+<h3 id="为什么要使用环形结构"><a href="#为什么要使用环形结构" class="headerlink" title="为什么要使用环形结构?"></a>为什么要使用环形结构?</h3><p>除了可以复用空间外，还可以反过来思考下，如果逻辑上不使用环形结构会怎么样?<br>那么<code>_head</code>和<code>_tail</code>会持续递增下去，当达到数组末尾后，如果有新的元素添加到末尾，那么就不得不把当前所有的元素都往前挪，然后更新<code>_head</code>和<code>_tail</code>为新的下标。</p>
+<p>即在不使用环形结构的情况下，入队操作可能会导致<code>O(N)</code>时间复杂度的操作，而使用索引来<code>mod</code>数组长度的操作来模拟环形队列，就可以保证在不扩容的情况下每次入队操作都是<code>O(1)</code>。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
+<li><p>调用<code>Peek</code>和<code>Dequeue</code>注意队列是否为空，否则会抛异常。</p>
+</li>
+<li><p>预估好容量，降低多次扩容带来的开销。</p>
+</li>
+<li><p>该队列不是双端队列<code>Deque</code>，只能操作队首元素，需要操作队末元素的话，考虑换用<code>List</code>或者自己实现。</p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C#</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/07/12/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BStack/" rel="prev" title="C#容器源码之Stack">
+      <i class="fa fa-chevron-left"></i> C#容器源码之Stack
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/08/11/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BSortedList/" rel="next" title="CSharp容器源码之SortedList">
+      CSharp容器源码之SortedList <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%AD%A3%E6%96%87"><span class="nav-number">2.</span> <span class="nav-text">正文</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">2.1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%90%E5%91%98%E5%8F%98%E9%87%8F"><span class="nav-number">2.2.</span> <span class="nav-text">成员变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0"><span class="nav-number">2.3.</span> <span class="nav-text">构造函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%A9%E5%AE%B9%E6%9C%BA%E5%88%B6"><span class="nav-number">2.4.</span> <span class="nav-text">扩容机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E5%87%BD%E6%95%B0"><span class="nav-number">2.5.</span> <span class="nav-text">关键函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Enqueue"><span class="nav-number">2.5.1.</span> <span class="nav-text">Enqueue</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Dequeue"><span class="nav-number">2.5.2.</span> <span class="nav-text">Dequeue</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Peek"><span class="nav-number">2.5.3.</span> <span class="nav-text">Peek</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Contains"><span class="nav-number">2.5.4.</span> <span class="nav-text">Contains</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%8E%AF%E5%BD%A2%E7%BB%93%E6%9E%84%E8%AF%B4%E6%98%8E"><span class="nav-number">2.6.</span> <span class="nav-text">环形结构说明</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E4%BD%BF%E7%94%A8%E7%8E%AF%E5%BD%A2%E7%BB%93%E6%9E%84"><span class="nav-number">2.6.1.</span> <span class="nav-text">为什么要使用环形结构?</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">2.7.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">0kk470</p>
+  <div class="site-description" itemprop="description">咸鱼KK的随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/0kk470" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;0kk470" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ookk47oo@gmail.com" title="E-Mail → mailto:ookk47oo@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">蜀ICP备2021017502号 </a>
+      <img src="/images/beian.png" style="display: inline-block;">
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">0kk470</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
