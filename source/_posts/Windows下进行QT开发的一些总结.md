@@ -57,4 +57,4 @@ msvc {
 
 ## 总结
 
-* [QT文档]("https://doc.qt.io/qt-5.15/") + Google + Stackoverflow 能解决99%的问题。
+* [QT文档](https://doc.qt.io/qt-5.15/) + Google + Stackoverflow 能解决99%的问题。
