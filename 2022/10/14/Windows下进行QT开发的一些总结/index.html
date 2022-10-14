@@ -20,25 +20,20 @@
     var CONFIG = {"hostname":"saltyfishkk.games","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="前言去年搭的用于Svn、Jenkins以及个人博客用的服务器快到期了，本来之前用学生身份一百多元买的，一看续费要1000多就想着能不能找点便宜的方式。正好看到最近新购服务器的活动还在进行，新服务器3年只需要264￥，就想着能不能把旧服务器备份下然后把数据全部转到新服务器，变相地“便宜续一波”，最后操作下来是可行的，记录下。 步骤1.进入旧服务器操作面板，制作新的个人镜像。  2.买个新服务器，选择">
+  <meta name="description" content="前言花了两三天写了一个小工具，用于将开源游戏金庸群侠传3D重制版的Mod上传到Steam创意工坊。 这里记录下使用QT开发的一些问题。 问题使用信号槽机制connect相关回调时找不到可匹配的函数。  原因: 部分UI类的slot函数存在多个同名函数重载的情况. 解决: 使用QOverload&lt;T&gt;::of显示地指定对应函数地址。  QMake文件找不到win64的条件编译宏  添加依">
 <meta property="og:type" content="article">
-<meta property="og:title" content="腾讯云服务器的便宜续费方式">
-<meta property="og:url" content="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/index.html">
+<meta property="og:title" content="Windows下进行QT开发的一些总结">
+<meta property="og:url" content="https://saltyfishkk.games/2022/10/14/Windows%E4%B8%8B%E8%BF%9B%E8%A1%8CQT%E5%BC%80%E5%8F%91%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/index.html">
 <meta property="og:site_name" content="小咸鱼">
-<meta property="og:description" content="前言去年搭的用于Svn、Jenkins以及个人博客用的服务器快到期了，本来之前用学生身份一百多元买的，一看续费要1000多就想着能不能找点便宜的方式。正好看到最近新购服务器的活动还在进行，新服务器3年只需要264￥，就想着能不能把旧服务器备份下然后把数据全部转到新服务器，变相地“便宜续一波”，最后操作下来是可行的，记录下。 步骤1.进入旧服务器操作面板，制作新的个人镜像。  2.买个新服务器，选择">
+<meta property="og:description" content="前言花了两三天写了一个小工具，用于将开源游戏金庸群侠传3D重制版的Mod上传到Steam创意工坊。 这里记录下使用QT开发的一些问题。 问题使用信号槽机制connect相关回调时找不到可匹配的函数。  原因: 部分UI类的slot函数存在多个同名函数重载的情况. 解决: 使用QOverload&lt;T&gt;::of显示地指定对应函数地址。  QMake文件找不到win64的条件编译宏  添加依">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/1.png">
-<meta property="og:image" content="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/2.png">
-<meta property="og:image" content="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/3.png">
-<meta property="og:image" content="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/4.png">
-<meta property="og:image" content="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/5.png">
-<meta property="article:published_time" content="2022-03-21T12:13:19.000Z">
-<meta property="article:modified_time" content="2022-06-09T15:11:18.813Z">
+<meta property="article:published_time" content="2022-10-14T08:20:20.000Z">
+<meta property="article:modified_time" content="2022-10-14T08:58:31.558Z">
 <meta property="article:author" content="0kk470">
+<meta property="article:tag" content="QT">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/1.png">
 
-<link rel="canonical" href="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/">
+<link rel="canonical" href="https://saltyfishkk.games/2022/10/14/Windows%E4%B8%8B%E8%BF%9B%E8%A1%8CQT%E5%BC%80%E5%8F%91%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/">
 
 
 <script id="page-configurations">
@@ -51,7 +46,7 @@
   };
 </script>
 
-  <title>腾讯云服务器的便宜续费方式 | 小咸鱼</title>
+  <title>Windows下进行QT开发的一些总结 | 小咸鱼</title>
   
 
 
@@ -171,7 +166,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://saltyfishkk.games/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/">
+    <link itemprop="mainEntityOfPage" href="https://saltyfishkk.games/2022/10/14/Windows%E4%B8%8B%E8%BF%9B%E8%A1%8CQT%E5%BC%80%E5%8F%91%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -184,7 +179,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          腾讯云服务器的便宜续费方式
+          Windows下进行QT开发的一些总结
         </h1>
 
         <div class="post-meta">
@@ -193,16 +188,10 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2022-03-21 20:13:19" itemprop="dateCreated datePublished" datetime="2022-03-21T20:13:19+08:00">2022-03-21</time>
+              <time title="创建时间：2022-10-14 16:20:20 / 修改时间：16:58:31" itemprop="dateCreated datePublished" datetime="2022-10-14T16:20:20+08:00">2022-10-14</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-06-09 23:11:18" itemprop="dateModified" datetime="2022-06-09T23:11:18+08:00">2022-06-09</time>
-              </span>
 
           
 
@@ -215,13 +204,36 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>去年搭的用于Svn、Jenkins以及个人博客用的服务器快到期了，本来之前用学生身份一百多元买的，一看续费要1000多就想着能不能找点便宜的方式。<br>正好看到最近新购服务器的活动还在进行，新服务器3年只需要264￥，就想着能不能把旧服务器备份下然后把数据全部转到新服务器，变相地“便宜续一波”，最后操作下来是可行的，记录下。</p>
-<h3 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h3><p>1.进入旧服务器操作面板，制作新的个人镜像。</p>
-<p><img src="/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/1.png" alt="pic1"><br><img src="/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/2.png" alt="pic2"></p>
-<p>2.买个新服务器，选择的区域一定要是和旧服务器在同一地域（比如旧服务器是上海那么新服务器也选上海的），因为不同地域的镜像是无法跨域使用。<br><img src="/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/3.png" alt="pic3"></p>
-<p>3.在新服务器操作面板，使用之前创建的旧服务器镜像重装系统。<br><img src="/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/4.png" alt="pic4"></p>
-<p>4.关掉旧服务器，在域名解析界面把ip定向到新的服务器公网ip上，另外记得在新服务器的防火墙界面把相关的端口也开放下。<br><img src="/2022/03/21/%E8%85%BE%E8%AE%AF%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BE%BF%E5%AE%9C%E7%BB%AD%E8%B4%B9%E6%96%B9%E5%BC%8F/5.png" alt="pic5"></p>
-<p>5.登录新服务器测试了相关的功能，除了像jenkins、unity这种需要重新登下账号外，无其他问题。</p>
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>花了两三天写了一个<a target="_blank" rel="noopener" href="https://github.com/0kk470/modtool_qt">小工具</a>，用于将开源游戏<a target="_blank" rel="noopener" href="https://github.com/0kk470/jynew">金庸群侠传3D</a>重制版的Mod上传到Steam创意工坊。</p>
+<p>这里记录下使用QT开发的一些问题。</p>
+<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><h3 id="使用信号槽机制connect相关回调时找不到可匹配的函数。"><a href="#使用信号槽机制connect相关回调时找不到可匹配的函数。" class="headerlink" title="使用信号槽机制connect相关回调时找不到可匹配的函数。"></a>使用信号槽机制connect相关回调时找不到可匹配的函数。</h3><hr>
+<ul>
+<li>原因: 部分UI类的slot函数存在多个同名函数重载的情况.</li>
+<li>解决: 使用<code>QOverload&lt;T&gt;::of</code>显示地指定对应函数地址。</li>
+</ul>
+<h3 id="QMake文件找不到win64的条件编译宏"><a href="#QMake文件找不到win64的条件编译宏" class="headerlink" title="QMake文件找不到win64的条件编译宏"></a>QMake文件找不到win64的条件编译宏</h3><hr>
+<ul>
+<li>添加依赖库时需要区分<code>x86</code>和<code>x86_64</code>的<code>Steamlib</code>时发现没有针对64位系统的宏。</li>
+<li>解决: 使用自定义宏手动控制，如下。<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">DEFINES += USE_x64 </span><br><span class="line">win32</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">contains</span>(DEFINES, USE_x64)&#123;</span><br><span class="line">        LIBS += -L$$PWD/steam/win64 -lsteam_api64</span><br><span class="line">    &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        LIBS += -L$$PWD/steam/win32 -lsteam_api</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="无法使用QWebEngineView依赖控件"><a href="#无法使用QWebEngineView依赖控件" class="headerlink" title="无法使用QWebEngineView依赖控件"></a>无法使用QWebEngineView依赖控件</h3><hr>
+<ul>
+<li>解决: <code>QTCreator</code>构建编译器默认选择的<code>MingGW</code>，但该环境下<code>QWebEngineView</code>不包含在依赖库里，换用<code>MSVC</code>编译即可。</li>
+</ul>
+<h3 id="切换到MSVC后编译错误-“-Visual-Studio-error-C2001-常量中有换行符-“"><a href="#切换到MSVC后编译错误-“-Visual-Studio-error-C2001-常量中有换行符-“" class="headerlink" title="切换到MSVC后编译错误 “ Visual Studio error C2001:常量中有换行符 “"></a>切换到MSVC后编译错误 “ Visual Studio error C2001:常量中有换行符 “</h3><hr>
+<ul>
+<li><p>原因: <code>MSVC</code>编译时使用的默认编码是根据windows本地语言来的，中文运行环境下为<code>GBK</code>，但是<code>QT</code>保存编码为<code>UTF-8</code>。因此<code>MSVC</code>编译时如果代码文件包含中文就会出现该问题。</p>
+</li>
+<li><p>解决: 项目的.pro文件里添加如下指令强制<code>MSVC</code> 使用<code>UTF-8</code>编码</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">msvc &#123;</span><br><span class="line">    QMAKE_CFLAGS += /utf<span class="number">-8</span></span><br><span class="line">    QMAKE_CXXFLAGS += /utf<span class="number">-8</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="Release构建完成后只有exe没有相关DLL"><a href="#Release构建完成后只有exe没有相关DLL" class="headerlink" title="Release构建完成后只有exe没有相关DLL"></a>Release构建完成后只有exe没有相关DLL</h3><hr>
+<ul>
+<li>解决: CMD命令行运行 <code>qwindeploy.exe [exe输出路径]</code>即可生成相关依赖库。</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li><a href="%22https://doc.qt.io/qt-5.15/%22">QT文档</a> + Google + Stackoverflow 能解决99%的问题。</li>
+</ul>
 
     </div>
 
@@ -230,6 +242,9 @@
     
 
       <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/QT/" rel="tag"># QT</a>
+          </div>
 
         
 
@@ -237,13 +252,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2022/02/21/WindowsServer%E4%B8%8A%E4%BD%BF%E7%94%A8Jenkins%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2github%E5%8D%9A%E5%AE%A2%E7%9A%84%E5%9D%91/" rel="prev" title="WindowsServer使用Jenkins自动部署github博客网站的坑">
-      <i class="fa fa-chevron-left"></i> WindowsServer使用Jenkins自动部署github博客网站的坑
+    <a href="/2022/08/11/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BSortedList/" rel="prev" title="C#容器源码之SortedList">
+      <i class="fa fa-chevron-left"></i> C#容器源码之SortedList
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2022/06/09/CSharp%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81%E4%B9%8BList/" rel="next" title="C#容器源码之List">
-      C#容器源码之List <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -302,7 +314,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4"><span class="nav-number">2.</span> <span class="nav-text">步骤</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%AE%E9%A2%98"><span class="nav-number">2.</span> <span class="nav-text">问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E4%BF%A1%E5%8F%B7%E6%A7%BD%E6%9C%BA%E5%88%B6connect%E7%9B%B8%E5%85%B3%E5%9B%9E%E8%B0%83%E6%97%B6%E6%89%BE%E4%B8%8D%E5%88%B0%E5%8F%AF%E5%8C%B9%E9%85%8D%E7%9A%84%E5%87%BD%E6%95%B0%E3%80%82"><span class="nav-number">2.1.</span> <span class="nav-text">使用信号槽机制connect相关回调时找不到可匹配的函数。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#QMake%E6%96%87%E4%BB%B6%E6%89%BE%E4%B8%8D%E5%88%B0win64%E7%9A%84%E6%9D%A1%E4%BB%B6%E7%BC%96%E8%AF%91%E5%AE%8F"><span class="nav-number">2.2.</span> <span class="nav-text">QMake文件找不到win64的条件编译宏</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A0%E6%B3%95%E4%BD%BF%E7%94%A8QWebEngineView%E4%BE%9D%E8%B5%96%E6%8E%A7%E4%BB%B6"><span class="nav-number">2.3.</span> <span class="nav-text">无法使用QWebEngineView依赖控件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%87%E6%8D%A2%E5%88%B0MSVC%E5%90%8E%E7%BC%96%E8%AF%91%E9%94%99%E8%AF%AF-%E2%80%9C-Visual-Studio-error-C2001-%E5%B8%B8%E9%87%8F%E4%B8%AD%E6%9C%89%E6%8D%A2%E8%A1%8C%E7%AC%A6-%E2%80%9C"><span class="nav-number">2.4.</span> <span class="nav-text">切换到MSVC后编译错误 “ Visual Studio error C2001:常量中有换行符 “</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Release%E6%9E%84%E5%BB%BA%E5%AE%8C%E6%88%90%E5%90%8E%E5%8F%AA%E6%9C%89exe%E6%B2%A1%E6%9C%89%E7%9B%B8%E5%85%B3DLL"><span class="nav-number">2.5.</span> <span class="nav-text">Release构建完成后只有exe没有相关DLL</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 

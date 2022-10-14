@@ -162,6 +162,166 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://saltyfishkk.games/2022/02/15/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93%E4%B9%8B%E4%B8%80/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0kk470">
+      <meta itemprop="description" content="咸鱼KK的随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小咸鱼">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/02/15/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93%E4%B9%8B%E4%B8%80/" class="post-title-link" itemprop="url">代码整洁之道1 - 命名</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-02-15 19:03:30" itemprop="dateCreated datePublished" datetime="2022-02-15T19:03:30+08:00">2022-02-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-02-18 15:14:52" itemprop="dateModified" datetime="2022-02-18T15:14:52+08:00">2022-02-18</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>《代码整洁之道》的第二章读书笔记整理，示例代码为C#, 逻辑大部分仿照原文使用的Java代码，加入了一些自己思考后的示例。</p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h3 id="1-名副其实"><a href="#1-名副其实" class="headerlink" title="1. 名副其实"></a>1. 名副其实</h3><hr>
+<p>要让别人一看变量、函数或类的名称就该知道它是啥、它做了什么事、它应该怎么用。</p>
+<p>假设有一个与时间相关的变量</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">int</span> d; </span><br></pre></td></tr></table></figure>
+<p>如果直接这么命名，第一次看到这变量的人不容易理解，更好的命名方式如下:</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">int</span> elapsedTimeInDays;</span><br><span class="line"><span class="built_in">int</span> daysSinceCreation;</span><br><span class="line"><span class="built_in">int</span> fileAgeInDays; </span><br></pre></td></tr></table></figure>
+<p>这样变量所代表的含义一目了然。</p>
+<p>以下代码同理，函数名含义模糊不清，另外列表<code>list1</code> 、常量<code>4</code>、迭代变量<code>x</code>等的意义未知。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> List&lt;<span class="built_in">int</span>[]&gt; getThem()</span><br><span class="line">&#123;</span><br><span class="line">    List&lt;<span class="built_in">int</span>[]&gt; list1 = <span class="keyword">new</span> List&lt;<span class="built_in">int</span>[]&gt;();</span><br><span class="line">    <span class="keyword">foreach</span>(<span class="built_in">int</span>[] x <span class="keyword">in</span> theList)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(x[<span class="number">0</span>] == <span class="number">4</span>)</span><br><span class="line">            list1.Add(cell);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> list1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以下为重构后的代码，使用一个类来封装相关的变量与逻辑。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> List&lt;Cell&gt; <span class="title">getFlaggedCells</span>(<span class="params"></span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">var</span> flaggedCells = <span class="keyword">new</span> List&lt;Cell&gt;();</span><br><span class="line">    <span class="keyword">foreach</span>(<span class="keyword">var</span> cell <span class="keyword">in</span> gameboard)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(cell.isFlagged())</span><br><span class="line">            flaggedCells.Add(cell);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> flaggedCells;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-避免误导"><a href="#2-避免误导" class="headerlink" title="2. 避免误导"></a>2. 避免误导</h3><hr>
+<ul>
+<li>避免使用与本意相悖的单词，比如 UniX平台下的 <code>hp</code>、<code>aix</code>、<code>sco</code> 等专有名称不应作为变量名。</li>
+<li>避免使用形如<code>accountList</code> 的名称，除非该变量本身就是<code>List</code>类型，考虑到未来该容器的类型可能会发生改变(比如变成了<code>Dictionary</code>、<code>HashSet</code>之类的)，这个时候<code>accountList</code>的命名就会引起其他开发人员错误的认知，他第一次看到该变量被调用时会认为这是一个<code>List</code>。 </li>
+<li>更好的命名是用 <code>accountGroup</code>、<code>bunchofAccounts</code>，甚至直接用<code>accounts</code>都行。</li>
+</ul>
+<h3 id="3-命名要有区分"><a href="#3-命名要有区分" class="headerlink" title="3. 命名要有区分"></a>3. 命名要有区分</h3><hr>
+<ul>
+<li><p>在同一作用范围内的命名不能太相似。比如</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">copyChars</span>(<span class="params"><span class="built_in">char</span>[] a1, <span class="built_in">char</span>[] a2</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">for</span>(<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; a1.Length; ++i)</span><br><span class="line">        a2[i] = a1[i];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述代码的参数名<code>a1</code>和<code>a2</code>完全可以用<code>source</code>和<code>destination</code>替代，如此的话函数使用者就知道他是将第一个数组的数据拷贝到第二个数组当中。</p>
+</li>
+<li><p>避免意义相近的名称，如<code>ProductData</code>和<code>ProuctInfo</code>这种。</p>
+</li>
+</ul>
+<h3 id="4-可读性良好的命名"><a href="#4-可读性良好的命名" class="headerlink" title="4. 可读性良好的命名"></a>4. 可读性良好的命名</h3><hr>
+<ul>
+<li>使用英文单词对变量进行命名，不要用各种简写或者拼音，以下为不好的命名示例。<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title">DtaRcrd102</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> DateTime genymdhms;</span><br><span class="line">    <span class="keyword">private</span> DateTime modymdhms;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> <span class="built_in">string</span>  pszqint = <span class="string">&quot;102&quot;</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title">Wuqi</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">float</span> chongnengshijian; <span class="comment">//充能时间</span></span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">int</span> danjiarongliang;      <span class="comment">//弹夹容量</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>纠正过后的良好命名如下。<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title">CustomerRecord</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> DateTime generationTime;</span><br><span class="line">    <span class="keyword">private</span> DateTime modificationTime;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> <span class="built_in">string</span>  recordId = <span class="string">&quot;102&quot;</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title">Weapon</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">float</span> chargeTime;</span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">int</span> clipSize;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="5-可搜索命名"><a href="#5-可搜索命名" class="headerlink" title="5. 可搜索命名"></a>5. 可搜索命名</h3><hr>
+<p>尽可能地使用常量定义和单词变量去替代纯数字或者纯字符串，这样其他人想修改值的时候只需要搜索到定义的地方修改就行，不用一个个去找（比如下面这段代码）。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title">Player</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">List</span>&lt;<span class="title">Weapon</span>&gt; m_Weapons</span> = <span class="keyword">new</span> List&lt;Weapon&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">AddWeapon</span>(<span class="params">Weapon newWeapon</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(m_Weapons.Count &gt;= <span class="number">5</span>)</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        m_Weapons.Add(newWeapon);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Weapon <span class="title">GetWeaponAt</span>(<span class="params"><span class="built_in">int</span> idx</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(idx &lt; <span class="number">0</span> || idx &gt;= <span class="number">5</span>)</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        <span class="keyword">return</span> m_Weapons[idx];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以优化为更容易搜索和维护的代码。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title">Player</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">List</span>&lt;<span class="title">Weapon</span>&gt; m_Weapons</span> = <span class="keyword">new</span> List&lt;Weapon&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">const</span> <span class="built_in">int</span> MAX_WEAPON_NUM = <span class="number">5</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">AddWeapon</span>(<span class="params">Weapon newWeapon</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(m_Weapons.Count &gt;= MAX_WEAPON_NUM)</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        m_Weapons.Add(newWeapon);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Weapon <span class="title">GetWeaponAt</span>(<span class="params"><span class="built_in">int</span> idx</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(idx &lt; <span class="number">0</span> || idx &gt;= MAX_WEAPON_NUM)</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        <span class="keyword">return</span> m_Weapons[idx];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样当后续想要修改最大武器数量只需要修改<code>MAX_WEAPON_NUM</code>处即可，也便于维护者按关键字<code>max</code>之类的搜索。</p>
+<h3 id="6-避免使用多余的编码"><a href="#6-避免使用多余的编码" class="headerlink" title="6. 避免使用多余的编码"></a>6. 避免使用多余的编码</h3><hr>
+<ul>
+<li>6.1 匈牙利语标记法<ul>
+<li>即在变量名前添加类型字符。比如<code>iCount</code>表示int类型的Count变量、<code>pUnit</code>表示指向一个Unit类的指针变量等，详细参见百科上的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%8C%88%E7%89%99%E5%88%A9%E5%91%BD%E5%90%8D%E6%B3%95">说明</a>。</li>
+<li>起源是在Windows的C语言API的时代，编译器不做类型检查，程序员需要这种方法来区分句柄、长指针或者void指针等变量的类型。现代高级语言一般不需要这样来做，作者也不建议这么来命名了。</li>
+<li>个人认为对于<code>Lua</code>、<code>Python</code> 这种非强类型的脚本语言来说，这种命名还是可以采取的。</li>
+</ul>
+</li>
+<li>6.2 成员前缀   <ul>
+<li>在类的成员变量(member variables)前添加 <code>m_</code> 后缀, 如上文的<code>Player</code> 里定义的<code>m_Weapons</code>。</li>
+<li>原文作者不建议使用成员前缀。这一点个人不是很赞同， 对于C#来说，在类的成员变量和索引器较多的情况下，还是应该引入前缀来区分。简而言之，视使用环境而定，我个人偏好使用成员前缀。</li>
+</ul>
+</li>
+<li>6.3 接口命名<ul>
+<li>作者也不建议在接口命名前添加大写字母<code>I</code>，比如比起<code>IShapreFactory</code>作者更青睐<code>ShapeFactory</code>。这一点个人也不是很赞同，私以为用这种方式区分好接口类和普通类还是有必要的。</li>
+</ul>
+</li>
+<li>6.4 中文(个人补充)<ul>
+<li>一般来说命名也不要用中文，不同机器如果默认编码不同会经常导致中文乱码。</li>
+</ul>
+</li>
+</ul>
+<h3 id="7-避免思维映射"><a href="#7-避免思维映射" class="headerlink" title="7. 避免思维映射"></a>7. 避免思维映射</h3><hr>
+<p>不要让代码阅读者在脑中把你的命名翻译为他们熟悉的名称，通俗点来说就是不要让命名产生不必要的联想。</p>
+<h3 id="8-命名的词性选择"><a href="#8-命名的词性选择" class="headerlink" title="8. 命名的词性选择"></a>8. 命名的词性选择</h3><hr>
+<ul>
+<li>类名、对象名应使用名词或者名词短语，比如 <code>Customer</code>、<code>WikiPage</code>、<code>Account</code>。</li>
+<li>方法、函数使用动词或者动词短语，比如<code>postPayment</code>、<code>deletePage</code>、<code>Save</code>等。</li>
+</ul>
+<h3 id="9-不要扮可爱"><a href="#9-不要扮可爱" class="headerlink" title="9. 不要扮可爱"></a>9. 不要扮可爱</h3><p>不要取一些自己认为很cool的名字，不要抖机灵。比如一个简单的<code>DeleteItem</code>函数不要写成<code>WipeOutTheUseless</code>之类的。</p>
+<h3 id="10-命名概念明确单一"><a href="#10-命名概念明确单一" class="headerlink" title="10. 命名概念明确单一"></a>10. 命名概念明确单一</h3><hr>
+<ul>
+<li>不要混用相同概念的词，每个抽象概念选一个词，并且一以贯之。比如不要在项目中同时有<code>xxxManager</code>、<code>xxxController</code>、<code>xxxDriver</code>这类相同意义的名词，选其中一种就行了。</li>
+<li>不要在不合适的情况下使用双关语。比如 <code>Add</code> 函数这种，在一个类当中它可能表示将两个值相加，也可能表示将一条数据条目添加到指定集合当中，如果出现了这种情况可以考虑换成<code>Append</code>或者<code>Insert</code>。</li>
+</ul>
+<h3 id="11-使用项目开发人员都熟悉的名称"><a href="#11-使用项目开发人员都熟悉的名称" class="headerlink" title="11. 使用项目开发人员都熟悉的名称"></a>11. 使用项目开发人员都熟悉的名称</h3><hr>
+<ul>
+<li>使用解决方案领域的名称。</li>
+<li>使用源自所涉问题领域的名称。</li>
+</ul>
+<h3 id="12-符合语境"><a href="#12-符合语境" class="headerlink" title="12. 符合语境"></a>12. 符合语境</h3><hr>
+<ul>
+<li><p>添加有意义的语境</p>
+<ul>
+<li>一个函数中出现了<code>state</code>变量，如果代码阅读者最开始理解不了这个变量的意义，他就得去定向到这个state的定义处，结合定义所在行的上下文来理解，导致花费更多的时间来熟悉代码。</li>
+<li>比如在一个名为<code>Player</code>的类里，state可能是指<code>AnimationState</code>，也可能是<code>GameState</code>，那么最好按照逻辑功能将使用的变量命名为对应的<code>animState</code>、<code>currentGameState</code>之类的，以此避免他人花费更多的时间去理解上下文。</li>
+</ul>
+</li>
+<li><p>避免无意义的语境</p>
+<ul>
+<li>避免在某些类前面加上应用名称的前缀，比如一个<code>加油站豪华版应用(Gas Station Deluxe)</code>中的每个类都加了<code>GSD</code>前缀，类似<code>GSDAccountAddress</code>这种，本来只是一个表示邮件地址的类，加了前缀后会让其他人误以为是用来什么特殊处理逻辑。</li>
+<li>这个问题个人也在实际开发过程中遇见过：在前东家游戏项目内阅读相关的C++源码时发现了很多带ES前缀的类（比如<code>ESArray</code>、<code>ESString</code>之类的），实际代码逻辑是一些针对项目本身需求优化过的STL容器，但一直很疑惑ES是啥特殊含义，还跑去问了上级老大，结果被告知ES是公司的英文简写。 这种容易造成误解的情况还是尽可能避免，实在需要的话，可以用命名空间包一层来处理。</li>
+</ul>
+</li>
+</ul>
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>整个第二章读下来，发现大部分坑已经在以前做项目的过程中趟过了，不过还是学到了新的东西，可见理论和实践还是应该相辅相成才能对个人给予最大的成长。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://saltyfishkk.games/2022/01/30/Astar%E5%AF%BB%E8%B7%AF%E5%9C%A8Unity%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84%E7%AE%80%E5%8D%95%E5%BA%94%E7%94%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -462,7 +622,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-count">14</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -475,7 +635,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
