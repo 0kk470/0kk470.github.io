@@ -20,18 +20,18 @@
     var CONFIG = {"hostname":"saltyfishkk.games","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="前言抽空给开源项目金庸群侠传3D重制版贡献代码时，有开发者同好觉得该项目现有的一键打包功能不是特别方便导出MOD，于是写了个优化过的MOD导出工具，这里记录下一些思路和总结。 一键打包的问题旧的一键打包存在以下几个缺陷:  打包会囊括所有已经打好标签的AssetBundle，导致打包时间较长。 一键打包过程不能中断，期间发生了错误也会一直进行，不利于即时修正问题。 打包结束后需要手动将相关的MOD">
+  <meta name="description" content="前言抽空给开源项目金庸群侠传3D重制版贡献代码时，有开发者同好觉得该项目现有的一键打包功能不是特别方便导出MOD，于是写了个优化过的MOD导出工具，这里记录下一些思路和总结。 一键打包的问题旧的一键打包存在以下几个缺陷。  打包会囊括所有已经打好标签的AssetBundle，导致打包时间较长。 一键打包过程不能中断，期间发生了错误也会一直进行，不利于即时修正问题。 打包结束后的后续操作繁琐，需要手">
 <meta property="og:type" content="article">
 <meta property="og:title" content="AssetBundle指定打包的坑">
 <meta property="og:url" content="https://saltyfishkk.games/2022/11/04/AssetBundle%E6%8C%87%E5%AE%9A%E6%89%93%E5%8C%85%E7%9A%84%E5%9D%91/index.html">
 <meta property="og:site_name" content="小咸鱼">
-<meta property="og:description" content="前言抽空给开源项目金庸群侠传3D重制版贡献代码时，有开发者同好觉得该项目现有的一键打包功能不是特别方便导出MOD，于是写了个优化过的MOD导出工具，这里记录下一些思路和总结。 一键打包的问题旧的一键打包存在以下几个缺陷:  打包会囊括所有已经打好标签的AssetBundle，导致打包时间较长。 一键打包过程不能中断，期间发生了错误也会一直进行，不利于即时修正问题。 打包结束后需要手动将相关的MOD">
+<meta property="og:description" content="前言抽空给开源项目金庸群侠传3D重制版贡献代码时，有开发者同好觉得该项目现有的一键打包功能不是特别方便导出MOD，于是写了个优化过的MOD导出工具，这里记录下一些思路和总结。 一键打包的问题旧的一键打包存在以下几个缺陷。  打包会囊括所有已经打好标签的AssetBundle，导致打包时间较长。 一键打包过程不能中断，期间发生了错误也会一直进行，不利于即时修正问题。 打包结束后的后续操作繁琐，需要手">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://saltyfishkk.games/2022/11/04/AssetBundle%E6%8C%87%E5%AE%9A%E6%89%93%E5%8C%85%E7%9A%84%E5%9D%91/1.png">
 <meta property="og:image" content="https://saltyfishkk.games/2022/11/04/AssetBundle%E6%8C%87%E5%AE%9A%E6%89%93%E5%8C%85%E7%9A%84%E5%9D%91/2.png">
 <meta property="og:image" content="https://saltyfishkk.games/2022/11/04/AssetBundle%E6%8C%87%E5%AE%9A%E6%89%93%E5%8C%85%E7%9A%84%E5%9D%91/3.png">
 <meta property="article:published_time" content="2022-11-04T11:42:54.000Z">
-<meta property="article:modified_time" content="2022-11-04T13:13:41.526Z">
+<meta property="article:modified_time" content="2022-11-04T13:21:08.794Z">
 <meta property="article:author" content="0kk470">
 <meta property="article:tag" content="Unity">
 <meta property="article:tag" content="AssetBundle">
@@ -195,7 +195,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-11-04 19:42:54 / 修改时间：21:13:41" itemprop="dateCreated datePublished" datetime="2022-11-04T19:42:54+08:00">2022-11-04</time>
+              <time title="创建时间：2022-11-04 19:42:54 / 修改时间：21:21:08" itemprop="dateCreated datePublished" datetime="2022-11-04T19:42:54+08:00">2022-11-04</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -219,15 +219,15 @@
 
       
         <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>抽空给开源项目<a target="_blank" rel="noopener" href="https://github.com/jynew/jynew">金庸群侠传3D重制版</a>贡献代码时，有开发者同好觉得该项目现有的一键打包功能不是特别方便导出MOD，于是写了个优化过的MOD导出工具，这里记录下一些思路和总结。</p>
-<h1 id="一键打包的问题"><a href="#一键打包的问题" class="headerlink" title="一键打包的问题"></a>一键打包的问题</h1><p>旧的一键打包存在以下几个缺陷:</p>
+<h1 id="一键打包的问题"><a href="#一键打包的问题" class="headerlink" title="一键打包的问题"></a>一键打包的问题</h1><p>旧的一键打包存在以下几个缺陷。</p>
 <ul>
 <li>打包会囊括所有已经打好标签的<code>AssetBundle</code>，导致打包时间较长。</li>
 <li>一键打包过程不能中断，期间发生了错误也会一直进行，不利于即时修正问题。</li>
-<li>打包结束后需要手动将相关的MOD资源挪到输出目录下，而且还需要手动建立一个存储MOD相关信息的xml文件。</li>
+<li>打包结束后的后续操作繁琐，需要手动将相关的MOD资源挪到输出目录下，而且还需要手动建立一个存储MOD相关信息的xml文件。</li>
 </ul>
 <h1 id="解决问题"><a href="#解决问题" class="headerlink" title="解决问题"></a>解决问题</h1><p>那么如何解决这些问题？</p>
 <ul>
-<li><p>首先，我们要确定首要目标是提供一个方便MOD开发者导出MOD的工具，那么最好是构建另一个全新的打包Pipeline，与现有的Pipeline独立开，尽量不影响原有的一键打包逻辑。之后所有的开发思路都以<b>方便MOD导出为</b>为目标来构建。</p>
+<li><p>首先，我们要确定首要目标是提供一个方便开发者导出MOD的工具，那么最好是构建另一个全新的打包<code>Pipeline</code>，与现有的<code>Pipeline</code>独立开，尽量不影响原有的一键打包逻辑。之后所有的开发思路都以<code>方便MOD导出</code>为目标来构建。</p>
 </li>
 <li><p>然后针对以上已存在的问题，提前整理好思路：</p>
 <ul>
@@ -265,11 +265,10 @@
 </ul>
 <h2 id="函数AssetDatabase-GetAssetPathsFromAssetBundle的坑"><a href="#函数AssetDatabase-GetAssetPathsFromAssetBundle的坑" class="headerlink" title="函数AssetDatabase.GetAssetPathsFromAssetBundle的坑"></a>函数<code>AssetDatabase.GetAssetPathsFromAssetBundle</code>的坑</h2><p>使用了该API来获取指定AB的所有资源路径来设置到<code>AssetBundleBuild</code>当中，结果构建时报错<br><img src="/2022/11/04/AssetBundle%E6%8C%87%E5%AE%9A%E6%89%93%E5%8C%85%E7%9A%84%E5%9D%91/2.png" alt="error2"></p>
 <ul>
-<li>原因：猜测是<code>GetAssetPathsFromAssetBundle</code>这个API会返回所有相关的资源文件，并且<code>AssetBundleBuild</code>作为参数的<code>BuildAssetBundles</code>方法内部并不会自动排除掉不合法的资源文件。</li>
-<li>解决：在获取路径时做一层过滤，排除掉脚本文件。</li>
+<li>原因: 猜测是<code>GetAssetPathsFromAssetBundle</code>这个API会返回所有相关的资源文件，并且<code>AssetBundleBuild</code>作为参数的<code>BuildAssetBundles</code>方法内部并不会自动排除掉不合法的资源文件。</li>
+<li>解决: 在获取路径时做一层过滤，排除掉脚本文件。</li>
 </ul>
 <figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="built_in">string</span>[] <span class="title">GetValidAssetPathsInBundle</span>(<span class="params"><span class="built_in">string</span> bundle</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">var</span> results = AssetDatabase.GetAssetPathsFromAssetBundle(bundle).</span><br><span class="line">        Where(assetPath =&gt; Path.GetExtension(assetPath) != <span class="string">&quot;.cs&quot;</span>).ToArray();</span><br><span class="line">    <span class="keyword">return</span> results;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 
 
 <h2 id="OdinInspector的坑"><a href="#OdinInspector的坑" class="headerlink" title="OdinInspector的坑"></a>OdinInspector的坑</h2><p>由于项目集成了该插件，索性顺势就用该插件编写工具窗口，结果在选择文件路径时总是会报错。</p>
@@ -278,7 +277,7 @@
 <li>原因: 反编译了插件DLL看了下源码，发现是调用<code>OnGUI</code>绘制时在某些极端的情况下没有调用<code>EndLayoutGroup</code>。</li>
 <li>解决: 查看了下插件版本，发现Odin是比较老的版本<code>3.0.5</code>，于是去插件官网搜了下最新的版本然后查看了下更新日志，发现这个问题在<code>3.1.0</code>版本之后修复掉了，于是手动更新了下，然后就正常了。</li>
 </ul>
-<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>导出工具源码参见 <a target="_blank" rel="noopener" href="https://github.com/jynew/jynew/blob/main/jyx2/Assets/Editor/BuildTools/Jyx2ModTool.cs">Jyx2Modtool.cs</a></p>
+<h1 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h1><p>导出工具源码参见 <a target="_blank" rel="noopener" href="https://github.com/jynew/jynew/blob/main/jyx2/Assets/Editor/BuildTools/Jyx2ModTool.cs">Jyx2Modtool.cs</a></p>
 
     </div>
 
@@ -360,7 +359,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E9%94%AE%E6%89%93%E5%8C%85%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">2.</span> <span class="nav-text">一键打包的问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98"><span class="nav-number">3.</span> <span class="nav-text">解决问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BB%93%E6%9E%9C"><span class="nav-number">4.</span> <span class="nav-text">结果</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%81%87%E5%88%B0%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91%E7%82%B9"><span class="nav-number">5.</span> <span class="nav-text">遇到的一些坑点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#AssetBundleBuild%E7%9A%84%E4%B8%80%E4%BA%9B%E9%9A%90%E6%99%A6%E9%97%AE%E9%A2%98"><span class="nav-number">5.1.</span> <span class="nav-text">AssetBundleBuild的一些隐晦问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%BD%E6%95%B0AssetDatabase-GetAssetPathsFromAssetBundle%E7%9A%84%E5%9D%91"><span class="nav-number">5.2.</span> <span class="nav-text">函数AssetDatabase.GetAssetPathsFromAssetBundle的坑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OdinInspector%E7%9A%84%E5%9D%91"><span class="nav-number">5.3.</span> <span class="nav-text">OdinInspector的坑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B6%E4%BB%96"><span class="nav-number">5.4.</span> <span class="nav-text">其他</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E9%94%AE%E6%89%93%E5%8C%85%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">2.</span> <span class="nav-text">一键打包的问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98"><span class="nav-number">3.</span> <span class="nav-text">解决问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BB%93%E6%9E%9C"><span class="nav-number">4.</span> <span class="nav-text">结果</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%81%87%E5%88%B0%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91%E7%82%B9"><span class="nav-number">5.</span> <span class="nav-text">遇到的一些坑点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#AssetBundleBuild%E7%9A%84%E4%B8%80%E4%BA%9B%E9%9A%90%E6%99%A6%E9%97%AE%E9%A2%98"><span class="nav-number">5.1.</span> <span class="nav-text">AssetBundleBuild的一些隐晦问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%BD%E6%95%B0AssetDatabase-GetAssetPathsFromAssetBundle%E7%9A%84%E5%9D%91"><span class="nav-number">5.2.</span> <span class="nav-text">函数AssetDatabase.GetAssetPathsFromAssetBundle的坑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OdinInspector%E7%9A%84%E5%9D%91"><span class="nav-number">5.3.</span> <span class="nav-text">OdinInspector的坑</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B6%E4%BB%96"><span class="nav-number">6.</span> <span class="nav-text">其他</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
