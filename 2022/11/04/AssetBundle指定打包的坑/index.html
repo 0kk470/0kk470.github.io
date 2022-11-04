@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"saltyfishkk.games","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="前言抽空给开源项目金庸群侠传3D重制版贡献代码时，有开发者同好觉得该项目现有的一键打包功能不是特别方便导出MOD，于是写了个优化过的MOD导出工具，这里记录下一些思路和总结。 一键打包的问题旧的一键打包存在以下几个缺陷:  打包会囊括所有已经打好标签的AssetBundle，导致打包时间较长。 一键打包过程不能中断，期间发生了错误也会一直进行，不利于即时修正问题。 打包结束后需要手动将相关的MOD">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AssetBundle指定打包的坑">
+<meta property="og:url" content="https://saltyfishkk.games/2022/11/04/AssetBundle%E6%8C%87%E5%AE%9A%E6%89%93%E5%8C%85%E7%9A%84%E5%9D%91/index.html">
+<meta property="og:site_name" content="小咸鱼">
+<meta property="og:description" content="前言抽空给开源项目金庸群侠传3D重制版贡献代码时，有开发者同好觉得该项目现有的一键打包功能不是特别方便导出MOD，于是写了个优化过的MOD导出工具，这里记录下一些思路和总结。 一键打包的问题旧的一键打包存在以下几个缺陷:  打包会囊括所有已经打好标签的AssetBundle，导致打包时间较长。 一键打包过程不能中断，期间发生了错误也会一直进行，不利于即时修正问题。 打包结束后需要手动将相关的MOD">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://saltyfishkk.games/2022/11/04/AssetBundle%E6%8C%87%E5%AE%9A%E6%89%93%E5%8C%85%E7%9A%84%E5%9D%91/1.png">
+<meta property="og:image" content="https://saltyfishkk.games/2022/11/04/AssetBundle%E6%8C%87%E5%AE%9A%E6%89%93%E5%8C%85%E7%9A%84%E5%9D%91/2.png">
+<meta property="og:image" content="https://saltyfishkk.games/2022/11/04/AssetBundle%E6%8C%87%E5%AE%9A%E6%89%93%E5%8C%85%E7%9A%84%E5%9D%91/3.png">
+<meta property="article:published_time" content="2022-11-04T11:42:54.000Z">
+<meta property="article:modified_time" content="2022-11-04T13:13:41.526Z">
+<meta property="article:author" content="0kk470">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="AssetBundle">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://saltyfishkk.games/2022/11/04/AssetBundle%E6%8C%87%E5%AE%9A%E6%89%93%E5%8C%85%E7%9A%84%E5%9D%91/1.png">
+
+<link rel="canonical" href="https://saltyfishkk.games/2022/11/04/AssetBundle%E6%8C%87%E5%AE%9A%E6%89%93%E5%8C%85%E7%9A%84%E5%9D%91/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>AssetBundle指定打包的坑 | 小咸鱼</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">小咸鱼</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://saltyfishkk.games/2022/11/04/AssetBundle%E6%8C%87%E5%AE%9A%E6%89%93%E5%8C%85%E7%9A%84%E5%9D%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0kk470">
+      <meta itemprop="description" content="咸鱼KK的随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小咸鱼">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          AssetBundle指定打包的坑
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-11-04 19:42:54 / 修改时间：21:13:41" itemprop="dateCreated datePublished" datetime="2022-11-04T19:42:54+08:00">2022-11-04</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Unity/" itemprop="url" rel="index"><span itemprop="name">Unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>抽空给开源项目<a target="_blank" rel="noopener" href="https://github.com/jynew/jynew">金庸群侠传3D重制版</a>贡献代码时，有开发者同好觉得该项目现有的一键打包功能不是特别方便导出MOD，于是写了个优化过的MOD导出工具，这里记录下一些思路和总结。</p>
+<h1 id="一键打包的问题"><a href="#一键打包的问题" class="headerlink" title="一键打包的问题"></a>一键打包的问题</h1><p>旧的一键打包存在以下几个缺陷:</p>
+<ul>
+<li>打包会囊括所有已经打好标签的<code>AssetBundle</code>，导致打包时间较长。</li>
+<li>一键打包过程不能中断，期间发生了错误也会一直进行，不利于即时修正问题。</li>
+<li>打包结束后需要手动将相关的MOD资源挪到输出目录下，而且还需要手动建立一个存储MOD相关信息的xml文件。</li>
+</ul>
+<h1 id="解决问题"><a href="#解决问题" class="headerlink" title="解决问题"></a>解决问题</h1><p>那么如何解决这些问题？</p>
+<ul>
+<li><p>首先，我们要确定首要目标是提供一个方便MOD开发者导出MOD的工具，那么最好是构建另一个全新的打包Pipeline，与现有的Pipeline独立开，尽量不影响原有的一键打包逻辑。之后所有的开发思路都以<b>方便MOD导出为</b>为目标来构建。</p>
+</li>
+<li><p>然后针对以上已存在的问题，提前整理好思路：</p>
+<ul>
+<li><p>打包时间太长。归根结底，打包时间太长还是因为一次性需要构建的资源太多。因此，可以让Unity只打包与该MOD相关的<code>AssetBundle</code>，在构建Pipeline中排除掉其他MOD的资源来节省时间。</p>
+</li>
+<li><p>打包过程不能中断。首先确定下为什么打包过程不能中断，有没有什么办法可以在报错时提前中断，围绕这一思路去查阅相关资料（比如官方Manual里就提到可以开启<code>AssetBundle</code>的<code>StrictMode</code>，这样错误一发生就会中断打包）。然后对于一些容易传入的错误参数，提前做好校验，在打包前尽可能将其排除掉并给使用者弹窗提示相关信息（比如校验MOD配置是否合法，校验输出路径是否合法）等等。</p>
+</li>
+<li><p>打包结束需要手动配置资源。分析下每个MOD的文件结构，其实都非常类似，包含一个资源包、一个地图包、一个XML配置文件，而且每个MOD在编辑器内都是有相关的<code>ScritableObject</code>配置文件。那么可以根据配置文件确定好每个MOD的相关信息，然后构建时按照一定的规则将相关资源和文件输出到指定文件夹即可。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="结果"><a href="#结果" class="headerlink" title="结果"></a>结果</h1><p>按照以上思路，最后整了个简单的MOD导出工具</p>
+<p><img src="/2022/11/04/AssetBundle%E6%8C%87%E5%AE%9A%E6%89%93%E5%8C%85%E7%9A%84%E5%9D%91/1.png" alt="ModExportTool"></p>
+<p>该工具优化掉了旧一键打包工具的缺陷点，缩短了导出MOD的持续时间，新的MOD构建导出流程也得到了部分MOD开发者同好的赞赏与感谢。</p>
+<h1 id="遇到的一些坑点"><a href="#遇到的一些坑点" class="headerlink" title="遇到的一些坑点"></a>遇到的一些坑点</h1><h2 id="AssetBundleBuild的一些隐晦问题"><a href="#AssetBundleBuild的一些隐晦问题" class="headerlink" title="AssetBundleBuild的一些隐晦问题"></a><a target="_blank" rel="noopener" href="https://docs.unity3d.com/ScriptReference/AssetBundleBuild.html">AssetBundleBuild</a>的一些隐晦问题</h2><p>为了使得Unity只构建指定MOD相关的<code>AssetBundle</code>，该工具使用了参数为<code>AssetBundleBuild</code>的重载函数</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> AssetBundleManifest <span class="title">BuildAssetBundles</span>(<span class="params"><span class="built_in">string</span> outputPath, AssetBundleBuild[] builds, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform</span>)</span>;</span><br></pre></td></tr></table></figure>
+<p>代替了常用的打包函数</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> AssetBundleManifest <span class="title">BuildAssetBundles</span>(<span class="params"><span class="built_in">string</span> outputPath, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform</span>)</span>;</span><br></pre></td></tr></table></figure>
+<p>前者需要手动传入AB名和其相关的资源路径。</p>
+<p>坑点如下:</p>
+<ul>
+<li><p>分批次调用<code>BuildPipeline</code>的方式会导致AB依赖关系断裂</p>
+<ul>
+<li>原因: 为了让该工具也支持一次导出多个MOD，所以分了多次来调用打包API，结果打出来后的AB<code>manifest文件</code>全都没有依赖关系，由于看不到引擎源码，猜测依赖关系构建可能是在<code>BuildAssetBundles</code>内部自动完成的。</li>
+<li>解决: 将所有需要打包的MOD配置缓存起来，只调用一次<code>BuildAssetBundles</code>即可，然后再根据配置缓存一次挪动到指定输出目录。</li>
+</ul>
+</li>
+<li><p>打好的所有AB包磁盘容量大小总是比一键打包多<code>200MB</code></p>
+<ul>
+<li>原因: 第一时间就想到了肯定是Resources目录的问题，毕竟之前就踩过坑了，用<code>AssetStudio</code>拆包看了下果然如此，</li>
+<li>解决: 将基础资源包也包含在pipleline中，这样Resources目录的资源会只达到基础资源包中，不过Resources资源冗余的问题依然存在（这个只能完全弃用该目录API方可解决，项目历史遗留问题）。</li>
+</ul>
+</li>
+</ul>
+<h2 id="函数AssetDatabase-GetAssetPathsFromAssetBundle的坑"><a href="#函数AssetDatabase-GetAssetPathsFromAssetBundle的坑" class="headerlink" title="函数AssetDatabase.GetAssetPathsFromAssetBundle的坑"></a>函数<code>AssetDatabase.GetAssetPathsFromAssetBundle</code>的坑</h2><p>使用了该API来获取指定AB的所有资源路径来设置到<code>AssetBundleBuild</code>当中，结果构建时报错<br><img src="/2022/11/04/AssetBundle%E6%8C%87%E5%AE%9A%E6%89%93%E5%8C%85%E7%9A%84%E5%9D%91/2.png" alt="error2"></p>
+<ul>
+<li>原因：猜测是<code>GetAssetPathsFromAssetBundle</code>这个API会返回所有相关的资源文件，并且<code>AssetBundleBuild</code>作为参数的<code>BuildAssetBundles</code>方法内部并不会自动排除掉不合法的资源文件。</li>
+<li>解决：在获取路径时做一层过滤，排除掉脚本文件。</li>
+</ul>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="built_in">string</span>[] <span class="title">GetValidAssetPathsInBundle</span>(<span class="params"><span class="built_in">string</span> bundle</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">var</span> results = AssetDatabase.GetAssetPathsFromAssetBundle(bundle).</span><br><span class="line">        Where(assetPath =&gt; Path.GetExtension(assetPath) != <span class="string">&quot;.cs&quot;</span>).ToArray();</span><br><span class="line">    <span class="keyword">return</span> results;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="OdinInspector的坑"><a href="#OdinInspector的坑" class="headerlink" title="OdinInspector的坑"></a>OdinInspector的坑</h2><p>由于项目集成了该插件，索性顺势就用该插件编写工具窗口，结果在选择文件路径时总是会报错。</p>
+<p><img src="/2022/11/04/AssetBundle%E6%8C%87%E5%AE%9A%E6%89%93%E5%8C%85%E7%9A%84%E5%9D%91/3.png" alt="error3"></p>
+<ul>
+<li>原因: 反编译了插件DLL看了下源码，发现是调用<code>OnGUI</code>绘制时在某些极端的情况下没有调用<code>EndLayoutGroup</code>。</li>
+<li>解决: 查看了下插件版本，发现Odin是比较老的版本<code>3.0.5</code>，于是去插件官网搜了下最新的版本然后查看了下更新日志，发现这个问题在<code>3.1.0</code>版本之后修复掉了，于是手动更新了下，然后就正常了。</li>
+</ul>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>导出工具源码参见 <a target="_blank" rel="noopener" href="https://github.com/jynew/jynew/blob/main/jyx2/Assets/Editor/BuildTools/Jyx2ModTool.cs">Jyx2Modtool.cs</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/AssetBundle/" rel="tag"># AssetBundle</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/10/14/Windows%E4%B8%8B%E8%BF%9B%E8%A1%8CQT%E5%BC%80%E5%8F%91%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/" rel="prev" title="Windows下进行QT开发的一些总结">
+      <i class="fa fa-chevron-left"></i> Windows下进行QT开发的一些总结
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E9%94%AE%E6%89%93%E5%8C%85%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">2.</span> <span class="nav-text">一键打包的问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98"><span class="nav-number">3.</span> <span class="nav-text">解决问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BB%93%E6%9E%9C"><span class="nav-number">4.</span> <span class="nav-text">结果</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%81%87%E5%88%B0%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91%E7%82%B9"><span class="nav-number">5.</span> <span class="nav-text">遇到的一些坑点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#AssetBundleBuild%E7%9A%84%E4%B8%80%E4%BA%9B%E9%9A%90%E6%99%A6%E9%97%AE%E9%A2%98"><span class="nav-number">5.1.</span> <span class="nav-text">AssetBundleBuild的一些隐晦问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%BD%E6%95%B0AssetDatabase-GetAssetPathsFromAssetBundle%E7%9A%84%E5%9D%91"><span class="nav-number">5.2.</span> <span class="nav-text">函数AssetDatabase.GetAssetPathsFromAssetBundle的坑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OdinInspector%E7%9A%84%E5%9D%91"><span class="nav-number">5.3.</span> <span class="nav-text">OdinInspector的坑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B6%E4%BB%96"><span class="nav-number">5.4.</span> <span class="nav-text">其他</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">0kk470</p>
+  <div class="site-description" itemprop="description">咸鱼KK的随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/0kk470" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;0kk470" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ookk47oo@gmail.com" title="E-Mail → mailto:ookk47oo@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">蜀ICP备2021017502号 </a>
+      <img src="/images/beian.png" style="display: inline-block;">
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">0kk470</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
