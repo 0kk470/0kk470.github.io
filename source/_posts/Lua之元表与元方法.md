@@ -42,7 +42,7 @@ function class(_className, _baseClass)
     setmetatable(_newclass, {__index = _baseClass})
 
     _newclass.ctor = function()
-
+        print("default ctor")
     end
 
     _newclass.new = function(...)
@@ -189,11 +189,11 @@ LUA_API int lua_setmetatable (lua_State *L, int objindex) {
 }
 
 ```
-从源码中还可以发现一些元表的使用trick:
+从源码中还可以发现一些元表的使用trick。
 * 可以设置某张表的```__metatable```为非空字段来屏蔽元表功能或者保护已设置好的元表。
 * Lua的```C API```除了可以对```Table```和```UserData```设置元表外，还可以对其他类型也设置一个全局的元表。
 * 设置元表会触发```LuaGC```的屏障机制来避免对应的表在当前可能处于GC回收阶段的情况下被回收掉。
-* 函数```setmetatable```是有返回值的，为设置了metatable的table。
+* 函数```setmetatable```是有返回值的，值为设置```metatable```的```table```。
 
 
 # 总结
