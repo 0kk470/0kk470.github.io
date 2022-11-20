@@ -267,4 +267,4 @@ Lua闭包其实就是一层层的函数套娃，某个执行过后的函数退�
 
 # 参考资料
 
-* [Roberto Ierusalimschy, Luiz Henrique de Figueiredo† , Waldemar Celes.  [Closures in Lua].      April 24, 2013](closures-draft.pdf)
+* [Roberto Ierusalimschy, Luiz Henrique de Figueiredo† , Waldemar Celes.  [Closures in Lua].      April 24, 2013](/download/closures-draft.pdf)
