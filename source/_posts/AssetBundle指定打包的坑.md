@@ -88,6 +88,10 @@ public static AssetBundleManifest BuildAssetBundles(string outputPath, BuildAsse
 * 原因: 反编译了插件DLL看了下源码，发现是调用```OnGUI```绘制时在某些极端的情况下没有调用```EndLayoutGroup```。
 * 解决: 查看了下插件版本，发现Odin是比较老的版本```3.0.5```，于是去插件官网搜了下最新的版本然后查看了下更新日志，发现这个问题在```3.1.0```版本之后修复掉了，于是手动更新了下，然后就正常了。
 
+## 未修改资源时AssetBundle重新打包速度过慢
+* 原因: AssetBundle构建的是增量的，即重新打包时与输出目录已存在的AB文件的```manifest```进行文件差异比较，如果没有新增或者修改资源就还是使用旧包。但是分Mod文件夹时会挪走上一次打好的包，所以每次都会重头把相关的资源打一遍。
+* 解决: 统一预留一个缓存文件夹用于所有AB包的存放，输出完成后再将其分别拷贝至对应文件夹。
+
 # 其他
 
 导出工具源码参见 [Jyx2Modtool.cs](https://github.com/jynew/jynew/blob/main/jyx2/Assets/Editor/BuildTools/Jyx2ModTool.cs)
